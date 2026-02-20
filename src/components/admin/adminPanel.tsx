@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Menu, Trash2Icon, ExternalLink, FolderCodeIcon, Loader2 } from 'lucide-react';
-import { addNewRecord, getTableData, updateRecord } from '@/actions/dbAction';
+import { Plus, Edit2, Menu, Trash2Icon, ExternalLink, FolderCodeIcon, Loader2, LogOutIcon } from 'lucide-react';
+import { addNewRecord, deleteRecord, getTableData, updateRecord, userlogout } from '@/actions/dbAction';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -12,6 +12,7 @@ import { fromDataType, MetaData } from '@/utils/types/uiTypes';
 import { categories } from '@/utils/consitants/consitaint';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface Tool {
   id: number;
@@ -46,16 +47,17 @@ export default function AdminPanel() {
 
   /* ===================== STATE ===================== */
   const [tools, setTools] = useState<fromDataType[]>([]);
+  const [fetching, setFetching] = useState(false);
 
   const [activeCategory, setActiveCategory] = useState('Header');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState<string>();
   const [searchTerm, setSearchTerm] = useState('');
-  const [metadata, setMata] = useState<MetaData>();
+  const [metadata, setMata] = useState<MetaData>({ title: '', description: '', keywords: '' });
   const [formData, setFormData] = useState<fromDataType>();
   const [loading, setLoading] = useState<boolean>();
-
+  const route = useRouter();
   /* ===================== HELPERS ===================== */
   const openModal = (tool?: fromDataType) => {
     setIsModalOpen(true);
@@ -82,12 +84,11 @@ export default function AdminPanel() {
     setMode('');
     setIsModalOpen(false);
   };
-  console.log(formData);
   const handleSubmit = async () => {
     setLoading(true);
     const updatedFormData = {
       ...formData,
-      metaData: metadata,
+      metaData: JSON.stringify(metadata),
     };
     let result;
     if (mode === 'edit') {
@@ -105,7 +106,7 @@ export default function AdminPanel() {
     }
     await getTableData(updatedFormData.category);
   };
-  // updateRecord(updatedFormData.url_id, updatedFormData)
+
   const filteredTools = tools.filter(
     (t) =>
       (activeCategory === 'all' || t.category === activeCategory) &&
@@ -113,30 +114,33 @@ export default function AdminPanel() {
         (t.url_id?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
         (t.des?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()))
   );
-  // console.log(filteredTools);
+
   const getDetails = async (id: string) => {
     setActiveCategory(id);
-    const data = await getTableData(id);
-    // Ensure data is an array (handle QueryResult/OkPacket case)
-    const arr = Array.isArray(data) ? data : [];
-    // Map database result to Tool[]
-    const mappedTools: Tool[] = arr.map((item: any) => ({
-      id: item.id,
-      url_id: item.url_id,
-      urlName: item.urlName,
-      name: item.name || '',
-      url: item.route,
-      des: item.des,
-      keyword: item.keyword,
-      metaData: item.metadata,
-      category: id === 'all' ? 'developerTools' : id,
-    }));
-    setTools(mappedTools);
-    // console.log(mappedTools);
+    setFetching(true);
+    try {
+      const data = await getTableData(id);
+      const arr = Array.isArray(data) ? data : [];
+      const mappedTools: fromDataType[] = arr.map((item: any) => ({
+        id: item.id,
+        url_id: item.url_id,
+        name: item.name || '',
+        urlName: item.urlName || '',
+        des: item.des || '',
+        keyword: item.keyword || '',
+        category: item.category || id,
+        metaData: item.metadata || '',
+        route: item.route || '',
+        url: item.url || '',
+      }));
+      setTools(mappedTools);
+    } finally {
+      setFetching(false);
+    }
   };
+
   const getMeta = (metaData?: string | any) => {
     if (!metaData) return null;
-
     if (typeof metaData === 'string') {
       try {
         return JSON.parse(metaData);
@@ -144,7 +148,6 @@ export default function AdminPanel() {
         return null;
       }
     }
-
     return metaData;
   };
 
@@ -152,12 +155,12 @@ export default function AdminPanel() {
     setMode('edit');
     openModal();
     let data = getMeta(tooldata.metaData);
-    setMata(data);
+    setMata(data ? { title: data.title || '', description: data.description || '', keywords: data.keywords || '' } : { title: '', description: '', keywords: '' });
     setFormData(tooldata);
   };
+
   const handleAdd = () => {
     setMode('add');
-    // Initialize form data for adding new tool
     setFormData({
       id: undefined,
       url_id: '',
@@ -177,7 +180,7 @@ export default function AdminPanel() {
     });
     openModal();
   };
-  // const getCategoryName = (id: string) => categories.find((c) => c.id === id)?.name || id;
+
   const generateRandomId = (length = 10) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -186,7 +189,41 @@ export default function AdminPanel() {
     }
     return result;
   };
+  const handleDelete = async (id: string, table: string) => {
+    const sure = confirm('Are You Sure Delete');
+    if (sure) {
+      let result;
+      result = await deleteRecord(id, table);
+      if (result.success) {
+        toast.success(result.message);
+        closeModal();
+        setLoading(false);
+      } else {
+        toast.error(result.message);
+        setLoading(false);
+      }
+      await getTableData(table);
 
+    }
+
+  }
+  const logout = async () => {
+    const sure = confirm('Are You Sure Logout Now');
+    if (sure) {
+      let result;
+      result = await userlogout();
+      if (result.success) {
+        toast.success(result.message);
+        closeModal();
+        setLoading(false);
+      } else {
+        toast.error(result.message);
+        setLoading(false);
+      }
+      await route.replace("/login");
+
+    }
+  }
   /* ===================== UI ===================== */
   return (
     <div
@@ -195,9 +232,8 @@ export default function AdminPanel() {
     >
       {/* ===================== SIDEBAR ===================== */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-black border-r dark:border-slate-800 transform transition-transform ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-black border-r dark:border-slate-800 transform transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0`}
       >
         <div className="p-6 border-b dark:border-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600">
           <h2 className="text-xl font-bold text-white">Admin Panel</h2>
@@ -206,17 +242,14 @@ export default function AdminPanel() {
 
         <nav className="p-4 p-y-2 space-y-1">
           {categories.map((cat) => {
-            // const Icon =                                                                                                                                                                          cat.icon;
             const active = activeCategory === cat.id;
             return (
               <button
                 key={cat.id}
-                // onClick={() => setActiveCategory(cat.id)}
                 onClick={() => getDetails(cat.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition hover:cursor-pointer text-sm font-bold
                   ${active ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
               >
-                {/* <FingerprintIcon /> */}
                 {cat.name}
               </button>
             );
@@ -232,9 +265,6 @@ export default function AdminPanel() {
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden">
               <Menu />
             </button>
-            {/* <h1 className="text-2xl font-bold">
-              {getCategoryName(activeCategory)}
-            </h1> */}
           </div>
 
           <div className="flex items-center gap-3">
@@ -250,138 +280,143 @@ export default function AdminPanel() {
             >
               <Plus size={18} /> Add Tool
             </button>
+            <button
+              onClick={() => logout()}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer"
+            >
+              <LogOutIcon size={18} /> Logout
+            </button>
           </div>
         </div>
 
         {/* CONTENT */}
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredTools.map((tool) => (
-              <div
-                key={tool.id}
-                className="group relative overflow-hidden rounded-2xl
-      bg-white dark:bg-slate-900
-      border border-slate-200 dark:border-slate-800
-      shadow-sm hover:shadow-xl hover:-translate-y-1
-      transition-all duration-300"
-              >
-                {/* Hover gradient */}
+            {fetching ? (
+              <div className="col-span-full flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <span className="ml-2 text-lg">Loading tools...</span>
+              </div>
+            ) : (
+              filteredTools.map((tool) => (
                 <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition
-        bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5"
-                />
+                  key={tool?.id}
+                  className="group relative overflow-hidden rounded-2xl
+                    bg-white dark:bg-slate-900
+                    border border-slate-200 dark:border-slate-800
+                    shadow-sm hover:shadow-xl hover:-translate-y-1
+                    transition-all duration-300"
+                >
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition
+                      bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5"
+                  />
 
-                {/* ACTIONS */}
-                <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                  <button
-                    onClick={() => handleEdit(tool)}
-                    className="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-blue-600 hover:text-white hover:cursor-pointer"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-red-600 hover:text-white hover:cursor-pointer">
-                    <Trash2Icon className="w-4 h-4" />
-                  </button>
-                </div>
+                  <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      onClick={() => handleEdit(tool)}
+                      className="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-blue-600 hover:text-white hover:cursor-pointer"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => tool.url_id && tool.category && handleDelete(tool.url_id, tool?.category)}
+                      className="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-red-600 hover:text-white hover:cursor-pointer"
+                      disabled={!tool.url_id}
+                    >
+                      <Trash2Icon className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                {/* CONTENT */}
-                <div className="relative p-5 space-y-4">
-                  {/* TOOL INFO */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {tool.name || tool.urlName}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                      {tool.des}
-                    </p>
+                  <div className="relative p-5 space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        {tool?.name || tool?.urlName}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {tool?.des}
+                      </p>
 
-                    <div className="mt-2 text-xs text-slate-400">
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {tool.keyword.split(',').map((keyword: string, i: number) => (
-                          <span
-                            key={i}
-                            className="px-2.5 py-1 text-sm rounded-lg
-                                  bg-emerald-300 text-slate-900 italic
-                                  transition"
-                          >
-                            {keyword.trim()}
-                          </span>
-                        ))}
+                      <div className="mt-2 text-xs text-slate-400">
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {tool?.keyword?.split(',').map((keyword: string, i: number) => (
+                            <span
+                              key={i}
+                              className="px-2.5 py-1 text-sm rounded-lg
+                                bg-emerald-300 text-slate-900 italic
+                                transition"
+                            >
+                              {keyword?.trim()}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
+
+                    {(() => {
+                      const meta = getMeta(tool.metaData);
+                      if (!meta) return null;
+                      return (
+                        <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 space-y-1">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            SEO Metadata
+                          </h4>
+                          {meta?.title && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                              <span className="font-medium">Title:</span> {meta?.title}
+                            </p>
+                          )}
+                          {meta?.description && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                              <span className="font-medium">Description:</span> {meta?.description}
+                            </p>
+                          )}
+                          {meta.keywords && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {meta?.keywords?.split(',').map((keyword: string, i: number) => (
+                                <span
+                                  key={i}
+                                  className="px-2.5 py-1 text-xs rounded-lg
+                                    bg-green-100 text-slate-700 font-mono
+                                    transition"
+                                >
+                                  {keyword?.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
-                  {/* SEO INFO */}
-                  {(() => {
-                    const meta = getMeta(tool.metaData);
-
-                    if (!meta) return null;
-
-                    return (
-                      <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 space-y-1">
-                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                          SEO Metadata
-                        </h4>
-
-                        {meta.title && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                            <span className="font-medium">Title:</span> {meta.title}
-                          </p>
-                        )}
-
-                        {meta.description && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                            <span className="font-medium">Description:</span> {meta.description}
-                          </p>
-                        )}
-                        {meta.keywords && (
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {meta.keywords.split(',').map((keyword: string, i: number) => (
-                              <span
-                                key={i}
-                                className="px-2.5 py-1 text-xs rounded-lg
-                                  bg-green-100 text-slate-700 font-mono
-                                  transition"
-                              >
-                                {keyword.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* FOOTER */}
-                <div className="relative px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                    {tool.category}
-                  </span>
-                  <span className="text-xs text-slate-400">ID: {tool.url_id}</span>
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Link
+                  <div className="relative px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                    <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                      {tool?.category}
                     </span>
-
-                    <Link
-                      href={(tool.route ?? tool.url) as string}
-                      target="_blank"
-                      className="group inline-flex items-center gap-2
-      px-3 py-1.5 rounded-lg
-      bg-slate-100 dark:bg-slate-800
-      text-sm text-blue-600 dark:text-blue-400
-      hover:bg-blue-50 dark:hover:bg-blue-900/30
-      transition"
-                    >
-                      <span className="truncate max-w-[200px]">{tool.route ?? tool.url}</span>
-
-                      <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100" />
-                    </Link>
+                    <span className="text-xs text-slate-400">ID: {tool?.url_id}</span>
+                    <div className="flex items-center gap-3 mt-3">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        Link
+                      </span>
+                      <Link
+                        href={(tool?.route ?? tool?.url) as string}
+                        target="_blank"
+                        className="group inline-flex items-center gap-2
+                          px-3 py-1.5 rounded-lg
+                          bg-slate-100 dark:bg-slate-800
+                          text-sm text-blue-600 dark:text-blue-400
+                          hover:bg-blue-50 dark:hover:bg-blue-900/30
+                          transition"
+                      >
+                        <span className="truncate max-w-[200px]">{tool?.route ?? tool?.url}</span>
+                        <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -389,7 +424,6 @@ export default function AdminPanel() {
       {/* ===================== MODAL ===================== */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-          {/* HEADER */}
           <div className="p-6 rounded-t-lg border-b-2">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
@@ -406,11 +440,9 @@ export default function AdminPanel() {
             </div>
           </div>
 
-          {/* BODY */}
           <div className="p-6 pt-0 space-y-5">
             <div>
               <label className="block text-sm font-semibold mb-2">Category</label>
-
               <Select
                 disabled={mode === 'edit'}
                 value={formData?.category ?? ''}
@@ -421,7 +453,6 @@ export default function AdminPanel() {
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-
                 <SelectContent>
                   {categories
                     .filter((cat) => cat.id !== 'all')
@@ -434,29 +465,13 @@ export default function AdminPanel() {
               </Select>
             </div>
 
-            {/* <div>
-              <label className="block text-sm font-semibold mb-2">Unique ID</label>
-              <Input
-                placeholder="e.g., ip-01"
-                value={formData?.url_id}
-                onChange={(e) =>
-                  setFormData((prev: any) => ({
-                    ...prev,
-                    url_id: e.target.value,
-                  }))
-                }
-              />
-              
-            </div> */}
-
             <div>
               <label className="block text-sm font-semibold mb-2">Unique ID</label>
-
               <div className="flex gap-2">
                 <Input
                   disabled={mode === 'edit'}
                   placeholder="e.g., ip-01"
-                  value={formData?.url_id}
+                  value={formData?.url_id ?? ''}
                   onChange={(e) =>
                     setFormData((prev: any) => ({
                       ...prev,
@@ -503,7 +518,7 @@ export default function AdminPanel() {
               <label className="block text-sm font-semibold mb-2">URL</label>
               <Input
                 placeholder="e.g., developmenttool/ip-tools"
-                value={formData?.route || formData?.url}
+                value={formData?.route || formData?.url || ''}
                 onChange={(e) =>
                   setFormData((prev: any) => ({
                     ...prev,
@@ -518,7 +533,7 @@ export default function AdminPanel() {
               <Textarea
                 rows={2}
                 placeholder="Brief description of the tool..."
-                value={formData?.des}
+                value={formData?.des ?? ''}
                 onChange={(e) =>
                   setFormData((prev: any) => ({
                     ...prev,
@@ -532,7 +547,7 @@ export default function AdminPanel() {
               <label className="block text-sm font-semibold mb-2">Keywords</label>
               <Input
                 placeholder="e.g., ip address, lookup, network"
-                value={formData?.keyword}
+                value={formData?.keyword ?? ''}
                 onChange={(e) =>
                   setFormData((prev: any) => ({
                     ...prev,
@@ -541,10 +556,10 @@ export default function AdminPanel() {
                 }
               />
             </div>
+
             <div className="pt-4 border-t-2 border-dashed space-y-4">
               <h5 className="text-sm font-bold text-center">SEO Meta Data</h5>
 
-              {/* TITLE */}
               <div>
                 <label className="block text-sm font-semibold mb-2">Title</label>
                 <Input
@@ -559,7 +574,6 @@ export default function AdminPanel() {
                 />
               </div>
 
-              {/* DESCRIPTION */}
               <div>
                 <label className="block text-sm font-semibold mb-2">Description</label>
                 <Textarea
@@ -575,14 +589,12 @@ export default function AdminPanel() {
                 />
               </div>
 
-              {/* KEYWORDS (TAG INPUT) */}
               <div>
                 <label className="block text-sm font-semibold mb-2">Keywords</label>
-
                 <div className="flex flex-wrap gap-2 p-2 border rounded-lg">
                   <Input
                     placeholder=" keyword ,"
-                    value={metadata?.keywords}
+                    value={metadata?.keywords ?? ''}
                     onChange={(e) =>
                       setMata((prev) => ({
                         ...prev,
@@ -594,9 +606,8 @@ export default function AdminPanel() {
               </div>
             </div>
 
-            {/* FOOTER */}
             <div className="flex gap-3 pt-4">
-              <Button onClick={handleSubmit} className="flex-1 cursor-pointer " disabled={loading}>
+              <Button onClick={handleSubmit} className="flex-1 cursor-pointer" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -608,7 +619,6 @@ export default function AdminPanel() {
                   'Create Tool'
                 )}
               </Button>
-
               <Button variant="secondary" className="flex-1" onClick={closeModal}>
                 Cancel
               </Button>

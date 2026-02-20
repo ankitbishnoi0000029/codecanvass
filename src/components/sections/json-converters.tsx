@@ -11,11 +11,174 @@ import { Settings, Palette, Download, RotateCcw } from "lucide-react"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 
+// Helper function to get file extension for download
+const getFileExtension = (converterId: string): string => {
+  const extensions: Record<string, string> = {
+    "json-to-java": "java",
+    "json-to-xml": "xml",
+    "json-to-yaml": "yaml",
+    "json-to-csv": "csv",
+    "json-to-tsv": "tsv",
+    "json-to-text": "txt",
+    "json-to-excel": "xlsx",
+    "json-to-html": "html"
+  }
+  return extensions[converterId] || "txt"
+}
+
+// Improved JSON to XML converter with proper nesting
+const jsonToXml = (obj: any, root = "root"): string => {
+  if (typeof obj !== 'object' || obj === null) {
+    return `<${root}>${obj}</${root}>`
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => jsonToXml(item, 'item')).join('')
+  }
+
+  const entries = Object.entries(obj)
+    .map(([key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        return jsonToXml(value, key)
+      }
+      return `<${key}>${value}</${key}>`
+    })
+    .join('')
+
+  return `<${root}>${entries}</${root}>`
+}
+
+// Improved JSON to YAML converter
+const jsonToYaml = (obj: any, indent = 0): string => {
+  if (typeof obj !== 'object' || obj === null) {
+    return String(obj)
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item =>
+      `${'  '.repeat(indent)}- ${jsonToYaml(item, indent + 1)}`
+    ).join('\n')
+  }
+
+  return Object.entries(obj)
+    .map(([key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        return `${'  '.repeat(indent)}${key}:\n${jsonToYaml(value, indent + 1)}`
+      }
+      return `${'  '.repeat(indent)}${key}: ${value}`
+    })
+    .join('\n')
+}
+
+// JSON to CSV/TSV converter
+const jsonToTable = (json: string, delimiter: ',' | '\t'): string => {
+  const parsed = JSON.parse(json)
+  const arr = Array.isArray(parsed) ? parsed : [parsed]
+
+  if (arr.length === 0) return ''
+
+  // Get all unique keys from all objects
+  const keys = Array.from(
+    new Set(arr.flatMap(obj => Object.keys(obj)))
+  )
+
+  const headers = keys.join(delimiter)
+  const rows = arr.map(obj =>
+    keys.map(key => {
+      const value = obj[key]
+      // Handle strings with delimiters by quoting
+      if (typeof value === 'string' && (value.includes(delimiter) || value.includes('"'))) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value ?? ''
+    }).join(delimiter)
+  )
+
+  return [headers, ...rows].join('\n')
+}
+
+// JSON to HTML table
+const jsonToHtml = (json: string): string => {
+  const parsed = JSON.parse(json)
+  const arr = Array.isArray(parsed) ? parsed : [parsed]
+
+  if (arr.length === 0) return '<table></table>'
+
+  const keys = Array.from(
+    new Set(arr.flatMap(obj => Object.keys(obj)))
+  )
+
+  const headers = keys.map(k => `<th>${k}</th>`).join('')
+  const rows = arr.map(obj => {
+    const cells = keys.map(key => {
+      const value = obj[key]
+      return `<td>${value !== undefined ? value : ''}</td>`
+    }).join('')
+    return `<tr>${cells}</tr>`
+  }).join('')
+
+  return `<table border="1" style="border-collapse: collapse;">
+  <thead><tr>${headers}</tr></thead>
+  <tbody>${rows}</tbody>
+</table>`
+}
+
+// JSON to Java class
+const jsonToJava = (json: string, className = "GeneratedClass"): string => {
+  const parsed = JSON.parse(json)
+
+  const getJavaType = (value: any): string => {
+    if (value === null) return "Object"
+    switch (typeof value) {
+      case "string": return "String"
+      case "number": return Number.isInteger(value) ? "int" : "double"
+      case "boolean": return "boolean"
+      case "object":
+        if (Array.isArray(value)) {
+          return value.length > 0
+            ? `List<${getJavaType(value[0])}>`
+            : "List<Object>"
+        }
+        return "Map<String, Object>"
+      default: return "Object"
+    }
+  }
+
+  const fields = Object.entries(parsed)
+    .map(([key, value]) => {
+      const javaType = getJavaType(value)
+      return `  private ${javaType} ${key};`
+    })
+    .join('\n')
+
+  const gettersSetters = Object.entries(parsed)
+    .map(([key, value]) => {
+      const javaType = getJavaType(value)
+      const capitalized = key.charAt(0).toUpperCase() + key.slice(1)
+      return `
+  public ${javaType} get${capitalized}() {
+    return ${key};
+  }
+
+  public void set${capitalized}(${javaType} ${key}) {
+    this.${key} = ${key};
+  }`
+    })
+    .join('\n')
+
+  return `import java.util.*;
+
+public class ${className} {
+${fields}
+${gettersSetters}
+}`
+}
+
 export function JsonConverters() {
   const [selectedConverter, setSelectedConverter] = useState<string>("")
   const [inputText, setInputText] = useState<string>("")
   const [outputText, setOutputText] = useState<string>("")
-
+  const [error, setError] = useState<string>("")
   const [list, setList] = useState<dataType[]>([])
 
   // Fetch SQL Tools
@@ -23,14 +186,21 @@ export function JsonConverters() {
     const fetchData = async () => {
       const categoriesData = await getTableData("json_converters") as dataType[]
       setList(categoriesData)
+
+      // Set first converter as default
+      if (categoriesData.length > 0) {
+        setSelectedConverter(categoriesData[0].route || categoriesData[0].id.toString())
+      }
     }
     fetchData()
   }, [])
 
   // Convert SQL data to SidebarOption format
   const sidebarOptions: SidebarOption[] = list.map((item) => ({
-    id: item.id.toString(),
+    id: item.route ?? item.id.toString(),
     label: item.urlName,
+    description: item.des,
+    keyword: item.keyword,
     icon: Palette,
   }))
 
@@ -40,86 +210,57 @@ export function JsonConverters() {
 
   // Get selected SQL Item
   const selectedOption = list.find(
-    (opt) => opt.id.toString() === selectedConverter
+    (opt) => (opt.route && opt.route === selectedConverter) || opt.id.toString() === selectedConverter
   ) || null
 
   useEffect(() => {
     setInputText("")
     setOutputText("")
+    setError("")
   }, [selectedConverter])
 
   // Conversion Logic
-  const convertJson = (json: string, type: string): string => {
+  const convertJson = (json: string, converterId: string): string => {
     try {
-      const parsed = JSON.parse(json)
+      // Validate JSON
+      if (!json.trim()) {
+        throw new Error("Please enter JSON to convert")
+      }
 
-      switch (type) {
+      // Try to parse to validate
+      JSON.parse(json)
+
+      switch (converterId) {
         case "json-to-java":
-          return Object.entries(parsed)
-            .map(([key, value]) => {
-              const jsType = typeof value
-              let javaType = "String"
-              if (jsType === "number") javaType = "double"
-              else if (jsType === "boolean") javaType = "boolean"
-              return `private ${javaType} ${key};`
-            })
-            .join("\n")
+          return jsonToJava(json)
 
-        case "json-to-xml": {
-          const jsonToXml = (obj: any, root = "root"): string =>
-            `<${root}>` +
-            Object.entries(obj)
-              .map(([k, v]) =>
-                typeof v === "object"
-                  ? jsonToXml(v, k)
-                  : `<${k}>${v}</${k}>`
-              )
-              .join("") +
-            `</${root}>`
-          return jsonToXml(parsed)
-        }
+        case "json-to-xml":
+          return jsonToXml(JSON.parse(json))
 
         case "json-to-yaml":
-          return Object.entries(parsed)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join("\n")
+          return jsonToYaml(JSON.parse(json))
 
-        case "json-to-csv": {
-          const arr = Array.isArray(parsed) ? parsed : [parsed]
-          const keys = Object.keys(arr[0] || {})
-          const rows = arr.map((obj) => keys.map((k) => obj[k]).join(","))
-          return [keys.join(","), ...rows].join("\n")
-        }
+        case "json-to-csv":
+          return jsonToTable(json, ',')
 
-        case "json-to-tsv": {
-          const arr = Array.isArray(parsed) ? parsed : [parsed]
-          const keys = Object.keys(arr[0] || {})
-          const rows = arr.map((obj) => keys.map((k) => obj[k]).join("\t"))
-          return [keys.join("\t"), ...rows].join("\n")
-        }
+        case "json-to-tsv":
+          return jsonToTable(json, '\t')
 
         case "json-to-text":
-          return JSON.stringify(parsed, null, 2)
+          return JSON.stringify(JSON.parse(json), null, 2)
 
-        case "json-to-html": {
-          const arr = Array.isArray(parsed) ? parsed : [parsed]
-          const keys = Object.keys(arr[0] || {})
-          const rows = arr
-            .map(
-              (obj) =>
-                `<tr>${keys.map((k) => `<td>${obj[k]}</td>`).join("")}</tr>`
-            )
-            .join("")
-          return `<table border="1"><tr>${keys
-            .map((k) => `<th>${k}</th>`)
-            .join("")}</tr>${rows}</table>`
-        }
+        case "json-to-excel":
+          return "Excel export requires server-side processing. For now, you can download as CSV and open in Excel."
+
+        case "json-to-html":
+          return jsonToHtml(json)
 
         default:
           return "Unsupported converter"
       }
-    } catch (e) {
-      return "❌ Invalid JSON input"
+    } catch (e: any) {
+      setError(e.message)
+      return `❌ Error: ${e.message}`
     }
   }
 
@@ -128,22 +269,39 @@ export function JsonConverters() {
       alert("Please select a converter.")
       return
     }
-    setOutputText(convertJson(inputText, selectedConverter))
+    setError("")
+    const result = convertJson(inputText, selectedConverter)
+    setOutputText(result)
   }
 
   const handleClear = () => {
     setInputText("")
     setOutputText("")
+    setError("")
   }
 
   const handleDownload = () => {
-    if (!outputText) return
+    if (!outputText || outputText.startsWith("❌")) return
 
+    const extension = getFileExtension(selectedConverter)
     const blob = new Blob([outputText], { type: "text/plain" })
     const link = document.createElement("a")
     link.href = URL.createObjectURL(blob)
-    link.download = `${selectedConverter}.txt`
+    link.download = `converted.${extension}`
     link.click()
+  }
+
+  const handleExampleClick = () => {
+    setInputText(JSON.stringify({
+      name: "John Doe",
+      age: 30,
+      email: "john@example.com",
+      address: {
+        city: "New York",
+        zip: "10001"
+      },
+      hobbies: ["reading", "coding"]
+    }, null, 2))
   }
 
   return (
@@ -173,20 +331,37 @@ export function JsonConverters() {
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-3 w-full"
-                rows={10}
-                placeholder="Paste your JSON here..."
+                className="border-2 border-dashed border-gray-300 rounded-lg p-3 w-full font-mono text-sm"
+                rows={12}
+                placeholder={`{
+  "name": "John Doe",
+  "age": 30,
+  "email": "john@example.com"
+}`}
               />
+              <Button
+                variant="link"
+                onClick={handleExampleClick}
+                className="mt-2 text-sm"
+              >
+                Load Example
+              </Button>
             </div>
 
             {/* Output */}
             <div>
               <label className="text-sm font-medium mb-2 block">Output</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 min-h-[200px] bg-gray-50 overflow-auto">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 min-h-[300px] bg-gray-50 overflow-auto">
                 {outputText ? (
-                  <pre className="text-sm whitespace-pre-wrap break-words">
-                    {outputText}
-                  </pre>
+                  outputText.startsWith("❌") ? (
+                    <p className="text-red-500 whitespace-pre-wrap break-words">
+                      {outputText}
+                    </p>
+                  ) : (
+                    <pre className="text-sm whitespace-pre-wrap break-words font-mono">
+                      {outputText}
+                    </pre>
+                  )
                 ) : (
                   <p className="text-gray-400">Converted output will appear here</p>
                 )}
@@ -196,11 +371,13 @@ export function JsonConverters() {
 
           {/* Buttons */}
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button onClick={handleConvert}>Convert</Button>
+            <Button onClick={handleConvert} disabled={!selectedConverter}>
+              Convert
+            </Button>
             <Button variant="outline" onClick={handleClear}>
               <RotateCcw className="w-4 h-4 mr-1" /> Clear
             </Button>
-            {outputText && (
+            {outputText && !outputText.startsWith("❌") && (
               <Button variant="secondary" onClick={handleDownload}>
                 <Download className="w-4 h-4 mr-1" /> Download
               </Button>
@@ -208,8 +385,8 @@ export function JsonConverters() {
           </div>
         </div>
 
-         {/* DETAILS BOX */}
-         {selectedOption && (
+        {/* DETAILS BOX */}
+        {selectedOption && (
           <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
             <h3 className="text-lg font-semibold">Converter Details</h3>
 
@@ -225,6 +402,7 @@ export function JsonConverters() {
               <div className="flex flex-wrap gap-2">
                 {selectedOption.keyword
                   ?.split(",")
+                  .filter(Boolean)
                   .map((kw, index) => (
                     <span
                       key={index}

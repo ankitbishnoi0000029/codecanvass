@@ -13,9 +13,9 @@ import { encode as base32Encode, decode as base32Decode } from "hi-base32";
 import bs58 from "bs58";
 import { getTableData } from "@/actions/dbAction";
 import { dataType } from "@/utils/types/uiTypes";
-import { useRouter } from "next/navigation";
-
-
+import { usePathname, useRouter } from "next/navigation";
+import Meta from "./meta";
+import { PageTitle } from "./title";
 
 /* ------------------------------------------------------
    ✔ MAIN COMPONENT
@@ -23,7 +23,8 @@ import { useRouter } from "next/navigation";
 export default function EncodeDecode() {
 
   const [list, setList] = useState<dataType[] | null>(null);
-
+  const router = useRouter(); // ✅ Single declaration
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +33,14 @@ export default function EncodeDecode() {
     };
     fetchData();
   }, []);
+
+  // Get slug from URL
+  useEffect(() => {
+    const slug = pathname.split("/").pop() ?? "";
+    setSelectedConverter(slug);
+    setOutput("");
+  }, [pathname]);
+
   /* Convert SQL → Sidebar format */
   const converterOptions: SidebarOption[] = useMemo(() => {
     if (!list) return [];
@@ -39,31 +48,29 @@ export default function EncodeDecode() {
       id: row.route ?? "",
       label: row.urlName,
       description: row.des,
-      keyword : row.keyword,
+      keyword: row.keyword,
       icon: Palette,
     }));
   }, [list]);
 
   /* Default selected tool from first row */
   const defaultTool = converterOptions[0]?.id || "";
-// console.log("defaultTool",defaultTool)
   const [selectedConverter, setSelectedConverter] = useState(defaultTool);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const router = useRouter();
-  /* Selected Option */
 
   /* Auto select first tool once list is loaded */
-useEffect(() => {
-  if (converterOptions.length > 0 && !selectedConverter) {
-    setSelectedConverter(converterOptions[0].id);
-  }
-}, [converterOptions, selectedConverter]);
+  useEffect(() => {
+    if (converterOptions.length > 0 && !selectedConverter) {
+      setSelectedConverter(converterOptions[0].id);
+    }
+  }, [converterOptions, selectedConverter]);
 
   const selectedOption = useMemo(
     () => converterOptions.find((opt) => opt.id === selectedConverter),
     [selectedConverter, converterOptions]
   );
+  console.log(selectedOption)
   /* Footer options */
   const footerOptions: SidebarOption[] = [
     { id: "settings", label: "Settings", icon: Settings },
@@ -228,7 +235,7 @@ useEffect(() => {
     setInput("");
     setOutput("");
   };
-// console.log(selectedOption)
+
   /* ------------------------------------------------------
      ✔ UI
   ------------------------------------------------------ */
@@ -243,16 +250,7 @@ useEffect(() => {
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">
-              {selectedOption?.label || "Select a Tool"}
-            </h2>
-
-            <p className="text-muted-foreground">
-              {selectedOption?.description ??
-                "Choose an encoding or decoding tool to begin."}
-            </p>
-          </div>
+          <PageTitle selectedData={selectedOption} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -283,37 +281,11 @@ useEffect(() => {
             </Button>
           </div>
         </div>
+
         {/* DETAILS BOX */}
         {selectedOption && (
-  <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
-    <h3 className="text-lg font-semibold">Converter Details</h3>
-
-    <p>
-      <strong>Description:</strong>
-      <br />
-      {selectedOption.description}
-    </p>
-
-    <div>
-      <strong className="block mb-2">Keywords:</strong>
-
-      <div className="flex flex-wrap gap-2">
-        {(selectedOption?.keyword ?? "")
-          .split(",")
-          .filter(Boolean)
-          .map((kw: string, index: number) => (
-            <span
-              key={index}
-              className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition "
-            >
-              {kw.trim()}
-            </span>
-          ))}
-      </div>
-    </div>
-  </div>
-)}
-
+           <Meta selectedData={selectedOption} />
+        )}
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

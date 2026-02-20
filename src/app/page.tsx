@@ -61,7 +61,7 @@ export default async function Home() {
       <Popular />
       {/* <NewFun /> */}
       <TrendingTools/>
-      <DevelTool />
+      {/* <DevelTool /> */}
     </main>
-  );
+  );  
 }

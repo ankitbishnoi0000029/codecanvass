@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Upload, Download, Palette, Settings } from "lucide-react"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
+import { PageTitle } from "./title"
 
 
 interface Base64Props {
@@ -171,10 +172,7 @@ export function Base64Tools() {
     >
       <SidebarContentWrapper selectedOption={selectedOption as unknown as SidebarOption | undefined}>
         <div className="mx-auto space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold">{(selectedOption as any)?.urlName}</h2>
-            <p className="text-sm text-muted-foreground">{(selectedOption as any)?.des}</p>
-          </div>
+          <PageTitle selectedData={selectedOption} />
 
           {/* Input + Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

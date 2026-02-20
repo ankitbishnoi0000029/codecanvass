@@ -122,9 +122,9 @@
     background-image: linear-gradient(to bottom right, #faf5ff, #fdf2f8, #ffffff);
   }
 
-  section {
+  /* section {
     padding-bottom: 96px;
     border-bottom: 1px solid rgb(49, 49, 49);
     margin-bottom: 24px;
-  }
+  } */
 }

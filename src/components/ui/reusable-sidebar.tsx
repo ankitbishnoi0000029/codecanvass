@@ -25,6 +25,7 @@ export interface SidebarOption {
   description?: string
   keyword? : string
   onClick?: () => void
+  urlName ? : string
 }
 
 export interface ReusableSidebarProps {
@@ -48,14 +49,15 @@ export function ReusableSidebar({
   children,
   className = ""
 }: ReusableSidebarProps) {
+  console.log(selectedOption)
   return (
     <SidebarProvider>
-      <div className={`flex h-screen w-screen ${className}`}>
+      <div className={`flex w-screen ${className}`}>
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 px-2 py-2">
               <Icon className="h-6 w-6" />
-              <span className="font-semibold">{title}</span>
+              <span className="font-bold ">{title}</span>
             </div>
           </SidebarHeader>
           
@@ -74,7 +76,7 @@ export function ReusableSidebar({
                             onOptionSelect(option.id)
                             option.onClick?.()
                           }}
-                          className="w-full justify-start"
+                          className={`w-full justify-start uppercase cursor-pointer ${selectedOption == option.id ? 'bg-blue-700 font-extrabold ' : ''}`}
                         >
                           <OptionIcon className="h-4 w-4" />
                           <span>{option.label}</span>
@@ -96,7 +98,7 @@ export function ReusableSidebar({
                     <SidebarMenuItem key={option.id}>
                       <SidebarMenuButton
                         onClick={option.onClick}
-                        className="w-full justify-start"
+                        className="w-full justify-start uppercase"
                       >
                         <OptionIcon className="h-4 w-4" />
                         <span>{option.label}</span>
@@ -129,11 +131,11 @@ export function SidebarContentWrapper({
   className = "" 
 }: SidebarContentProps) {
   return (
-    <div className={`flex w-full h-full flex-col ${className}`}>
+    <div className={`flex w-full pt-6 flex-col ${className}`}>
       <header className="flex h-16 items-center gap-2 border-b px-4">
         <SidebarTrigger />
-        <h1 className="text-lg font-semibold">
-          {selectedOption?.label}
+        <h1 className="text-lg font-bold uppercase">
+          {selectedOption?.label || selectedOption?.urlName}
         </h1>
       </header>
       

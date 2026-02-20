@@ -1,4 +1,4 @@
-import { BackgroundRemover } from "@/components/sections/background-remover";
+import { BackgroundRemoverClient } from "./background-remover-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,6 +23,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  // return <BackgroundRemover />;
-  // return <div>Hello</div>;
+  return <BackgroundRemoverClient />;
 }

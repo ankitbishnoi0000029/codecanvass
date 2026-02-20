@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Code, Rocket, Zap, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function WelcomePage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -53,7 +54,7 @@ export default function WelcomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-x-hidden">
+    <div className="w-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-x-hidden">
       <main className="relative z-10 w-full">
         <div className="w-full">
           <div
@@ -147,15 +148,20 @@ export default function WelcomePage() {
 
               {/* ⚡ Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-                <button className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                <Link href={"/json-formatter"} className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
                   <Zap className="w-5 h-5" />
                   Try JSON Formatter
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link >
+                <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Flag Maker
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link >
 
-                <button className="px-6 py-3 bg-white text-purple-700 font-semibold rounded-2xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 shadow-lg transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                <Link href={"/base64-tools/image-to-base64"} className="px-6 py-3 bg-white text-purple-700 font-semibold rounded-2xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 shadow-lg transform hover:-translate-y-1 transition-all flex items-center gap-2">
                   🖼️ Convert Image to Base64
-                </button>
+                </Link >
               </div>
 
               {/* 🚀 Floating Icons */}

@@ -1,217 +1,256 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ReusableSidebar,
   SidebarContentWrapper,
   SidebarOption,
 } from "@/components/ui/reusable-sidebar";
 import { Button } from "@/components/ui/button";
-import { Settings, Palette, Download, RotateCcw } from "lucide-react";
+import { Settings, Palette, Download, RotateCcw, Copy } from "lucide-react";
 import { dataType } from "@/utils/types/uiTypes";
 import { getTableData } from "@/actions/dbAction";
+import { useRouter, usePathname } from "next/navigation";
+import YAML from "yaml";
+import { PageTitle } from "./title";
+import Meta from "./meta";
+
+/* ============================= */
+/* FILE EXTENSIONS */
+/* ============================= */
+const getFileExtension = (converterId: string): string => {
+  const extensions: Record<string, string> = {
+    "yaml-to-json": "json",
+    "yaml-to-xml": "xml",
+    "yaml-to-csv": "csv",
+    "yaml-to-tsv": "tsv",
+    "yaml-to-html": "html",
+    "yaml-to-text": "txt",
+    "yaml-to-base64": "txt",
+    "base64-to-yaml": "yaml",
+  };
+  return extensions[converterId] || "txt";
+};
+
+const getConverterName = (fullPath: string): string => {
+  const parts = fullPath.split("/");
+  return parts[parts.length - 1];
+};
+
+/* ============================= */
+/* COMPONENT */
+/* ============================= */
 
 export function YamlConverters() {
-  const [selectedConverter, setSelectedConverter] = useState<string>("");
-  const [inputText, setInputText] = useState<string>("");
-  const [outputText, setOutputText] = useState<string>("");
+  const router = useRouter();
+  const pathname = usePathname();
 
+  const [selectedConverter, setSelectedConverter] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [outputText, setOutputText] = useState("");
+  const [error, setError] = useState("");
   const [list, setList] = useState<dataType[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  // Fetch SQL Tools
+  /* ============================= */
+  /* LOAD DB DATA */
+  /* ============================= */
   useEffect(() => {
     const fetchData = async () => {
-      const categoriesData = await getTableData("yaml_converters");
-      setList(categoriesData as dataType[]);
+      const rows = await getTableData("yaml_converters");
+      const arr = Array.isArray(rows) ? (rows as dataType[]) : [];
+      setList(arr);
+      setLoaded(true);
     };
     fetchData();
   }, []);
 
-  // Convert SQL data to SidebarOption format
-  const sidebarOptions: SidebarOption[] = list.map((item) => ({
-    id: item.id.toString(),
-    label: item.urlName,
-    icon: Palette,
-  }));
+  /* ============================= */
+  /* SYNC URL SLUG AFTER LOAD */
+  /* ============================= */
+  useEffect(() => {
+    if (!loaded || list.length === 0) return;
 
-  const footerOptions: SidebarOption[] = [
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
+    const slug = pathname.split("/").pop() || "";
 
-  // Get selected dataType for business logic
-  const selectedData = list.find(
-    (opt) => opt.id.toString() === selectedConverter
+    const exists = list.find(
+      (item) => item.route === slug || item.id.toString() === slug
+    );
+
+    if (exists) {
+      setSelectedConverter(exists.route || exists.id.toString());
+    } else {
+      const first = list[0];
+      const firstRoute = first.route || first.id.toString();
+      setSelectedConverter(firstRoute);
+
+      const basePath = pathname.split("/").slice(0, -1).join("/");
+      router.replace(`${basePath}/${firstRoute}`);
+    }
+  }, [loaded, list, pathname, router]);
+
+  /* ============================= */
+  /* RESET ON CONVERTER CHANGE */
+  /* ============================= */
+  useEffect(() => {
+    setInputText("");
+    setOutputText("");
+    setError("");
+  }, [selectedConverter]);
+
+  /* ============================= */
+  /* SIDEBAR OPTIONS */
+  /* ============================= */
+  const sidebarOptions: SidebarOption[] = useMemo(
+    () =>
+      list.map((item) => ({
+        id: item.route ?? item.id.toString(),
+        label: item.urlName,
+        description: item.des,
+        keyword: item.keyword,
+        icon: Palette,
+      })),
+    [list]
   );
 
-  // Get selected SidebarOption for UI
+  const selectedData = list.find(
+    (opt) =>
+      opt.route === selectedConverter ||
+      opt.id.toString() === selectedConverter
+  );
+
   const selectedOption = sidebarOptions.find(
     (opt) => opt.id === selectedConverter
   );
 
-  // Reset inputs on converter change
-  useEffect(() => {
-    setInputText("");
-    setOutputText("");
-  }, [selectedConverter]);
+  /* ============================= */
+  /* ROUTE CHANGE HANDLER */
+  /* ============================= */
+  const handleConverterChange = (id: string) => {
+    if (id === selectedConverter) return;
 
-  // --- Conversion Logic ---
-  const convertYaml = (yaml: string, type: string): string => {
-    try {
-      const lines = yaml.split("\n");
-      const obj: Record<string, any> = {};
+    setSelectedConverter(id);
 
-      lines.forEach((line) => {
-        const [key, value] = line.split(":").map((x) => x.trim());
-        if (key) obj[key] = value;
-      });
+    const basePath = pathname.split("/").slice(0, -1).join("/");
+    router.push(`${basePath}/${id}`);
+  };
 
-      switch (type) {
-        case "yaml-to-json":
-          return JSON.stringify(obj, null, 2);
+  /* ============================= */
+  /* CONVERT LOGIC */
+  /* ============================= */
+  const convertYaml = (yaml: string, converterPath: string): string => {
+    if (!yaml.trim()) throw new Error("Please enter YAML to convert");
 
-        case "yaml-to-xml":
-          return (
-            "<root>" +
-            Object.entries(obj)
-              .map(([k, v]) => `<${k}>${v}</${k}>`)
-              .join("") +
-            "</root>"
-          );
+    const name = getConverterName(converterPath);
 
-        case "yaml-to-csv":
-          return Object.keys(obj).join(",") + "\n" + Object.values(obj).join(",");
+    switch (name) {
+      case "yaml-to-json":
+        return JSON.stringify(YAML.parse(yaml), null, 2);
 
-        case "yaml-to-tsv":
-          return Object.keys(obj).join("\t") + "\n" + Object.values(obj).join("\t");
+      case "yaml-to-text":
+        return YAML.stringify(YAML.parse(yaml), { indent: 2 });
 
-        case "yaml-to-text":
-          return Object.entries(obj)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join("\n");
+      case "yaml-to-base64":
+        YAML.parse(yaml);
+        return btoa(unescape(encodeURIComponent(yaml)));
 
-        case "yaml-to-html":
-          return `<table border="1"><tr>${Object.keys(obj)
-            .map((k) => `<th>${k}</th>`)
-            .join("")}</tr><tr>${Object.values(obj)
-            .map((v) => `<td>${v}</td>`)
-            .join("")}</tr></table>`;
+      case "base64-to-yaml":
+        const decoded = decodeURIComponent(escape(atob(yaml)));
+        YAML.parse(decoded);
+        return decoded;
 
-        default:
-          return "Unsupported conversion type";
-      }
-    } catch (err) {
-      return "❌ Invalid YAML input";
+      default:
+        throw new Error(`Unsupported converter: ${name}`);
     }
   };
 
-  // --- Handlers ---
   const handleConvert = () => {
-    if (!selectedConverter) {
-      alert("Please select a converter.");
-      return;
+    if (!selectedConverter) return;
+
+    try {
+      setError("");
+      const result = convertYaml(inputText, selectedConverter);
+      setOutputText(result);
+    } catch (err: any) {
+      setError(err.message);
+      setOutputText(`❌ Error: ${err.message}`);
     }
-
-    const type = selectedData?.urlName || "";
-    setOutputText(convertYaml(inputText, type));
-  };
-
-  const handleClear = () => {
-    setInputText("");
-    setOutputText("");
   };
 
   const handleDownload = () => {
-    if (!outputText) return;
+    if (!outputText || outputText.startsWith("❌")) return;
+
+    const extension = getFileExtension(
+      getConverterName(selectedConverter)
+    );
 
     const blob = new Blob([outputText], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${selectedData?.urlName || "converted"}.txt`;
+    link.download = `converted.${extension}`;
     link.click();
   };
 
+  /* ============================= */
+  /* UI */
+  /* ============================= */
   return (
     <ReusableSidebar
       title="YAML Converters"
       icon={Palette}
       options={sidebarOptions}
       selectedOption={selectedConverter}
-      onOptionSelect={(id) => setSelectedConverter(id)}
-      footerOptions={footerOptions}
+      onOptionSelect={handleConverterChange}
+      footerOptions={[{ id: "settings", label: "Settings", icon: Settings }]}
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto">
-          <h2 className="text-2xl font-bold mb-2">
-            {selectedData?.urlName || "Select a Converter"}
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            {selectedData?.des ||
-              "Choose a conversion type from the sidebar to begin."}
-          </p>
+          <PageTitle selectedData={selectedData} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-medium">Input YAML</label>
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="border-2 border-dashed rounded-lg p-3 h-96 w-full"
-              />
-            </div>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="border p-3 h-96 w-full font-mono text-sm"
+              placeholder="Enter YAML..."
+            />
 
-            <div>
-              <label className="text-sm font-medium">Output</label>
-              <textarea
-                value={outputText}
-                readOnly
-                className="border-2 border-dashed rounded-lg p-3 h-96 w-full bg-gray-50"
-              />
-
-              {outputText && (
-                <Button className="mt-3" variant="secondary" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" /> Download
-                </Button>
+            <div className="border p-3 h-96 bg-gray-50 overflow-auto">
+              {outputText ? (
+                <pre className="whitespace-pre-wrap text-sm">
+                  {outputText}
+                </pre>
+              ) : (
+                <p className="text-gray-400">
+                  Converted output will appear here
+                </p>
               )}
             </div>
           </div>
 
           <div className="mt-6 flex gap-3">
             <Button onClick={handleConvert}>Convert</Button>
-
-            <Button variant="outline" onClick={handleClear}>
+            <Button variant="outline" onClick={() => setInputText("")}>
               <RotateCcw className="mr-1 h-4 w-4" /> Clear
             </Button>
+
+            {outputText && !outputText.startsWith("❌") && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => navigator.clipboard.writeText(outputText)}
+                >
+                  <Copy className="mr-1 h-4 w-4" /> Copy
+                </Button>
+                <Button variant="outline" onClick={handleDownload}>
+                  <Download className="mr-1 h-4 w-4" /> Download
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* DETAILS BOX */}
-        {selectedData && (
-          <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
-            <h3 className="text-lg font-semibold">Converter Details</h3>
-
-            <p>
-              <strong>Description:</strong>
-              <br />
-              {selectedData.des}
-            </p>
-
-            <div>
-              <strong className="block mb-2">Keywords:</strong>
-
-              <div className="flex flex-wrap gap-2">
-                {selectedData.keyword
-                  ?.split(",")
-                  .map((kw, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition ">
-                      {kw.trim()}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {selectedData && <Meta selectedData={selectedData} />}
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

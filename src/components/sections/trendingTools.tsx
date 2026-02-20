@@ -20,7 +20,7 @@ export function TrendingTools() {
   }, []);
 
   return (
-    <section className="relative py-16 px-6">
+    <section className="relative py-16 px-6 my-6">
       {/* Minimal modern background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-white to-slate-100" />
 

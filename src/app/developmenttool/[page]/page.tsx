@@ -2,6 +2,8 @@ import React from 'react'
 import type { Metadata } from "next";
 import { MetaData } from "@/utils/types/uiTypes";
 import { getMeta } from "@/actions/dbAction";
+import ImageTools from '@/components/sections/dl';
+import DL from '@/components/sections/dl';
 
 interface PageProps {
   params: Promise<{ page: string }>;
@@ -10,7 +12,7 @@ interface PageProps {
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const { params } = await props;
   const { page } = await params;
-  const data = await getMeta("development_tool", page);
+  const data = await getMeta("developertools", page);
 
   if (!data) {
     return {
@@ -58,7 +60,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 const page = () => {
   return (
-    <div>page</div>
+    <DL />
   )
 }
 

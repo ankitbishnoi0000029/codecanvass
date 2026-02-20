@@ -2,12 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Upload, X, Check, Download, Link } from "lucide-react";
 
-declare global {
-  interface Window {
-    shareData: Record<string, any>;
-  }
-}
-
 interface ReceivedFile {
   blob: Blob;
   name: string;
@@ -20,7 +14,10 @@ interface FileInfo {
   type: string;
 }
 
-export default function RandomToolsPage() {
+// Simple PeerJS-like signaling using a public service
+const SIGNALING_SERVER = "wss://signaling.yjs.dev"; // Free WebSocket signaling server
+
+export default function FileSharePage() {
   const [step, setStep] = useState<"upload" | "sharing" | "receiving">("upload");
   const [file, setFile] = useState<File | null>(null);
   const [shareLink, setShareLink] = useState("");
@@ -37,233 +34,283 @@ export default function RandomToolsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const receivedChunksRef = useRef<string[]>([]);
   const fileInfoRef = useRef<FileInfo | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
   const peerIdRef = useRef("");
+  const remoteIdRef = useRef("");
 
-  // ---- On mount: generate id and detect ?share= query ----
   useEffect(() => {
-    const id = Math.random().toString(36).substring(2, 10);
+    const id = Math.random().toString(36).substring(2, 15);
     setPeerId(id);
     peerIdRef.current = id;
-
-    // initialize global storage for in-page demo sharing
-    window.shareData = window.shareData || {};
 
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get("share");
     if (shareId) {
       setStep("receiving");
-      // slight delay to allow global store initialization if sender in same page created just now
-      setTimeout(() => initializeReceiver(shareId), 50);
+      remoteIdRef.current = shareId;
+      setTimeout(() => initializeReceiver(shareId), 100);
     }
 
-    // cleanup on unmount
     return () => {
       cleanupConnections();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- helpers ----
   const generateQRCode = (text: string) => {
     const size = 200;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-      text
-    )}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
   };
 
   const cleanupConnections = () => {
     try {
-      if (connectionRef.current && connectionRef.current.close) {
-        connectionRef.current.close();
-      }
-    } catch (e) {}
+      if (connectionRef.current) connectionRef.current.close();
+    } catch (e) { }
     try {
-      if (peerRef.current) {
-        peerRef.current.close();
-      }
-    } catch (e) {}
+      if (peerRef.current) peerRef.current.close();
+    } catch (e) { }
+    try {
+      if (wsRef.current) wsRef.current.close();
+    } catch (e) { }
     connectionRef.current = null;
     peerRef.current = null;
+    wsRef.current = null;
   };
 
-  // ---- SENDER: create peer, datachannel, offer ----
+  // WebSocket signaling setup
+  const setupWebSocket = (role: "sender" | "receiver") => {
+    const ws = new WebSocket(SIGNALING_SERVER);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      // Register with our peer ID
+      ws.send(JSON.stringify({
+        type: "register",
+        id: peerIdRef.current
+      }));
+    };
+
+    ws.onmessage = async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+
+        if (message.type === "offer" && role === "receiver") {
+          await handleOffer(message.offer, message.from);
+        } else if (message.type === "answer" && role === "sender") {
+          await handleAnswer(message.answer);
+        } else if (message.type === "ice-candidate") {
+          await handleIceCandidate(message.candidate);
+        }
+      } catch (err) {
+        console.error("Error handling WebSocket message:", err);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setStatus("disconnected");
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket closed");
+    };
+
+    return ws;
+  };
+
+  const sendViaWebSocket = (message: any) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
+  };
+
+  // SENDER: Initialize and create offer
   const initializeSender = async () => {
     if (!file) return;
 
     cleanupConnections();
+    setupWebSocket("sender");
 
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
       ],
     });
 
     peerRef.current = pc;
 
-    // maintain candidate arrays in the shareData for simple local-window signalling
-    const shareId = peerIdRef.current;
-    window.shareData[shareId] = window.shareData[shareId] || {};
-    window.shareData[shareId].candidates = window.shareData[shareId].candidates || [];
-
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        // push candidate where receiver can find and add it
-        window.shareData[shareId].candidates.push(event.candidate.toJSON());
+        sendViaWebSocket({
+          type: "ice-candidate",
+          candidate: event.candidate.toJSON(),
+          to: remoteIdRef.current,
+          from: peerIdRef.current
+        });
       }
     };
 
-    // create data channel and setup handlers
-    const channel = pc.createDataChannel("fileTransfer", { ordered: true });
+    const channel = pc.createDataChannel("fileTransfer", {
+      ordered: true,
+      maxRetransmits: 10
+    });
     setupDataChannel(channel, "sender");
 
-    // create offer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    // share minimal info in global object
-    const domain = window.location.origin;
-    const link = `${domain}?share=${shareId}`;
+    const domain = window.location.origin + window.location.pathname;
+    const link = `${domain}?share=${peerIdRef.current}`;
     setShareLink(link);
     setQrCode(generateQRCode(link));
-
-    window.shareData[shareId].offer = offer;
-    window.shareData[shareId].file = {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    };
-    window.shareData[shareId].senderPC = pc;
 
     setStep("sharing");
     setStatus("waiting");
 
-    // Poll for answer and for receiver ICE candidates (this is in-page demo signalling)
-    // Wait for receiver to put answer into shareData[shareId].answer.
-    const waitForAnswer = setInterval(async () => {
-      const sd = window.shareData?.[shareId];
-      if (sd && sd.answer && sd.answer.sdp) {
-        clearInterval(waitForAnswer);
-        try {
-          await pc.setRemoteDescription(new RTCSessionDescription(sd.answer));
-          setStatus("connected");
-        } catch (err) {
-          console.error("Error setting remote desc on sender:", err);
-        }
+    // Wait for WebSocket to be ready before sending offer
+    const waitForWs = setInterval(() => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        clearInterval(waitForWs);
+        // Offer will be sent when receiver connects and requests it
       }
-    }, 300);
-
-    // Poll for remote ICE candidates from receiver (the receiver will push candidates to shareData[shareId].rCandidates)
-    const waitForRCandidates = setInterval(async () => {
-      const sd = window.shareData?.[shareId];
-      if (sd && Array.isArray(sd.rCandidates) && sd.rCandidates.length > 0) {
-        while (sd.rCandidates.length) {
-          const cand = sd.rCandidates.shift();
-          try {
-            await pc.addIceCandidate(cand);
-          } catch (e) {
-            console.warn("sender addIceCandidate failed:", e);
-          }
-        }
-      }
-      // stop polling if pc closed
-      if (!peerRef.current) clearInterval(waitForRCandidates);
-    }, 300);
+    }, 100);
   };
 
-  // ---- RECEIVER: read offer, create answer, connect ----
-  const initializeReceiver = async (shareId: string) => {
+  // RECEIVER: Initialize and handle offer
+  const initializeReceiver = async (senderId: string) => {
+    cleanupConnections();
+    const ws = setupWebSocket("receiver");
+    remoteIdRef.current = senderId;
+
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+      ],
+    });
+
+    peerRef.current = pc;
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendViaWebSocket({
+          type: "ice-candidate",
+          candidate: event.candidate.toJSON(),
+          to: senderId,
+          from: peerIdRef.current
+        });
+      }
+    };
+
+    pc.ondatachannel = (event) => {
+      setupDataChannel(event.channel, "receiver");
+    };
+
+    // Wait for WebSocket to be ready, then request offer from sender
+    const waitForWs = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        clearInterval(waitForWs);
+        sendViaWebSocket({
+          type: "request-offer",
+          to: senderId,
+          from: peerIdRef.current
+        });
+      }
+    }, 100);
+
+    setStatus("waiting");
+  };
+
+  const handleOffer = async (offer: RTCSessionDescriptionInit, from: string) => {
+    if (!peerRef.current) return;
+
+    remoteIdRef.current = from;
+
+    await peerRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peerRef.current.createAnswer();
+    await peerRef.current.setLocalDescription(answer);
+
+    sendViaWebSocket({
+      type: "answer",
+      answer: answer,
+      to: from,
+      from: peerIdRef.current
+    });
+
+    setStatus("connected");
+  };
+
+  const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
+    if (!peerRef.current) return;
+    await peerRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+    setStatus("connected");
+  };
+
+  const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
+    if (!peerRef.current) return;
     try {
-      const sd = window.shareData?.[shareId];
-      if (!sd || !sd.offer) {
-        alert("Invalid or expired share link");
-        return;
-      }
-
-      cleanupConnections();
-
-      const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-        ],
-      });
-
-      peerRef.current = pc;
-
-      // prepare arrays for exchanging candidates
-      window.shareData[shareId] = window.shareData[shareId] || {};
-      window.shareData[shareId].rCandidates = window.shareData[shareId].rCandidates || [];
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          // push receiver candidate to rCandidates array for sender to consume
-          window.shareData[shareId].rCandidates.push(event.candidate.toJSON());
-        }
-      };
-
-      pc.ondatachannel = (event) => {
-        setupDataChannel(event.channel, "receiver");
-      };
-
-      // set remote (sender's offer)
-      await pc.setRemoteDescription(new RTCSessionDescription(sd.offer));
-
-      // create answer
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      // store answer for sender to pick
-      window.shareData[shareId].answer = answer;
-
-      // Now poll for sender ICE candidates pushed into window.shareData[shareId].candidates
-      const pollSenderCandidates = setInterval(async () => {
-        const s = window.shareData?.[shareId];
-        if (s && Array.isArray(s.candidates) && s.candidates.length > 0) {
-          while (s.candidates.length) {
-            const cand = s.candidates.shift();
-            try {
-              await pc.addIceCandidate(cand);
-            } catch (e) {
-              console.warn("receiver addIceCandidate failed:", e);
-            }
-          }
-        }
-        // stop if peer closed
-        if (!peerRef.current) clearInterval(pollSenderCandidates);
-      }, 300);
-
-      // if file info existed on shareData, keep it for display (not strictly needed)
-      if (sd.file) {
-        fileInfoRef.current = sd.file;
-      }
-
-      setStatus("connected");
-    } catch (err: any) {
-      console.error("initializeReceiver error:", err);
-      alert("Connection failed: " + (err?.message || err));
+      await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.error("Error adding ICE candidate:", err);
     }
   };
 
-  // ---- Data channel setup for sender/receiver ----
+  // Enhanced WebSocket message handler for sender
+  useEffect(() => {
+    if (!wsRef.current) return;
+
+    const originalOnMessage = wsRef.current.onmessage;
+
+    wsRef.current.onmessage = async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+
+        if (message.type === "request-offer") {
+          // Receiver is requesting our offer
+          if (peerRef.current && peerRef.current.localDescription) {
+            remoteIdRef.current = message.from;
+            sendViaWebSocket({
+              type: "offer",
+              offer: peerRef.current.localDescription,
+              to: message.from,
+              from: peerIdRef.current
+            });
+          }
+        } else if (originalOnMessage && wsRef.current) {
+          originalOnMessage.call(wsRef.current, event);
+        }
+      } catch (err) {
+        console.error("Error in message handler:", err);
+      }
+    };
+  }, [wsRef.current?.readyState]);
+
   const setupDataChannel = (channel: RTCDataChannel, role: string) => {
     connectionRef.current = channel;
 
     channel.onopen = () => {
+      console.log("Data channel opened");
       setStatus("connected");
       if (role === "sender") {
-        // start sending file when channel opens
-        sendFile();
+        setTimeout(() => sendFile(), 500);
       }
     };
 
     channel.onclose = () => {
+      console.log("Data channel closed");
       setStatus("disconnected");
+    };
+
+    channel.onerror = (error) => {
+      console.error("Data channel error:", error);
     };
 
     if (role === "receiver") {
       channel.onmessage = (event: MessageEvent) => {
-        // two message types: JSON metadata (fileInfo, chunk meta) OR direct binary - but we always use JSON base64 here
         try {
           const data = JSON.parse(event.data);
           if (data.type === "fileInfo") {
@@ -271,14 +318,11 @@ export default function RandomToolsPage() {
             receivedChunksRef.current = [];
             setProgress(0);
           } else if (data.type === "chunk") {
-            // data.data is base64 string
             receivedChunksRef.current.push(data.data);
-            const currentProgress =
-              (receivedChunksRef.current.length / data.totalChunks) * 100;
+            const currentProgress = (receivedChunksRef.current.length / data.totalChunks) * 100;
             setProgress(Math.round(currentProgress));
 
             if (receivedChunksRef.current.length === data.totalChunks) {
-              // assemble
               const byteArrays = receivedChunksRef.current.map((b64) => {
                 const binary = atob(b64);
                 const len = binary.length;
@@ -286,7 +330,7 @@ export default function RandomToolsPage() {
                 for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
                 return bytes;
               });
-              // combine into single blob
+
               if (fileInfoRef.current) {
                 const blob = new Blob(byteArrays, { type: fileInfoRef.current.type });
                 setReceivedFile({
@@ -302,37 +346,28 @@ export default function RandomToolsPage() {
           console.error("Error parsing data channel message:", error);
         }
       };
-    } else {
-      // sender may choose to monitor messages as well (ack/nacks)
-      channel.onmessage = (e: MessageEvent) => {
-        // optional: handle acks here
-        // console.log("sender got message:", e.data);
-      };
     }
   };
 
-  // ---- Sending file in chunks (sender) ----
   const sendFile = async () => {
     if (!file || !connectionRef.current || connectionRef.current.readyState !== "open") {
-      console.warn("No file or datachannel not open yet.");
+      console.warn("Cannot send file - channel not ready");
       return;
     }
 
+    console.log("Starting file transfer...");
     setProgress(0);
 
-    // send file metadata first
-    if (connectionRef.current) {
-      connectionRef.current.send(
-        JSON.stringify({
-          type: "fileInfo",
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-        })
-      );
-    }
+    connectionRef.current.send(
+      JSON.stringify({
+        type: "fileInfo",
+        name: file.name,
+        size: file.size,
+        fileType: file.type,
+      })
+    );
 
-    const chunkSize = 16 * 1024; // 16KB
+    const chunkSize = 16 * 1024;
     const totalChunks = Math.ceil(file.size / chunkSize);
 
     for (let i = 0; i < totalChunks; i++) {
@@ -340,21 +375,18 @@ export default function RandomToolsPage() {
       const end = Math.min(start + chunkSize, file.size);
       const chunk = file.slice(start, end);
 
-      // read as arrayBuffer
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           try {
             const arr = new Uint8Array(reader.result as ArrayBuffer);
-            // convert to binary string then base64
             let binary = "";
-            const block = 0x8000; // chunking to avoid stack issues on large arrays
+            const block = 0x8000;
             for (let j = 0; j < arr.length; j += block) {
               const slice = arr.subarray(j, j + block);
               binary += String.fromCharCode.apply(null, Array.from(slice));
             }
-            const b64 = btoa(binary);
-            resolve(b64);
+            resolve(btoa(binary));
           } catch (err) {
             reject(err);
           }
@@ -363,27 +395,27 @@ export default function RandomToolsPage() {
         reader.readAsArrayBuffer(chunk);
       });
 
-      connectionRef.current.send(
-        JSON.stringify({
-          type: "chunk",
-          data: base64,
-          totalChunks,
-        })
-      );
+      if (connectionRef.current && connectionRef.current.readyState === "open") {
+        connectionRef.current.send(
+          JSON.stringify({
+            type: "chunk",
+            data: base64,
+            totalChunks,
+          })
+        );
 
-      setProgress(Math.round(((i + 1) / totalChunks) * 100));
-
-      // small delay to avoid saturating channel
-      await new Promise((r) => setTimeout(r, 8));
+        setProgress(Math.round(((i + 1) / totalChunks) * 100));
+        await new Promise((r) => setTimeout(r, 10));
+      }
     }
+
+    console.log("File transfer complete");
   };
 
-  // ---- file select / drag-drop handlers ----
   const handleFileSelect = (selectedFile: File) => {
     if (selectedFile) {
       setFile(selectedFile);
-      // initialize sender flow
-      setTimeout(() => initializeSender(), 50);
+      setTimeout(() => initializeSender(), 100);
     }
   };
 
@@ -391,10 +423,12 @@ export default function RandomToolsPage() {
     e.preventDefault();
     setIsDragging(true);
   };
+
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -402,7 +436,6 @@ export default function RandomToolsPage() {
     if (droppedFile) handleFileSelect(droppedFile);
   };
 
-  // ---- copy to clipboard ----
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -413,7 +446,6 @@ export default function RandomToolsPage() {
     }
   };
 
-  // ---- download received file ----
   const downloadReceivedFile = () => {
     if (!receivedFile) return;
     const url = URL.createObjectURL(receivedFile.blob);
@@ -435,6 +467,7 @@ export default function RandomToolsPage() {
   };
 
   const resetApp = () => {
+    cleanupConnections();
     setStep("upload");
     setFile(null);
     setShareLink("");
@@ -442,23 +475,9 @@ export default function RandomToolsPage() {
     setProgress(0);
     setReceivedFile(null);
     setStatus("disconnected");
-    try {
-      if (connectionRef.current && connectionRef.current.close) connectionRef.current.close();
-    } catch (e) {}
-    try {
-      if (peerRef.current) peerRef.current.close();
-    } catch (e) {}
-    connectionRef.current = null;
-    peerRef.current = null;
-    // cleanup global shareData entry if any
-    try {
-      if (window.shareData && peerIdRef.current && window.shareData[peerIdRef.current]) {
-        delete window.shareData[peerIdRef.current];
-      }
-    } catch {}
   };
 
-  // ----- UI: Receiving screen ----
+  // UI: Receiving screen
   if (step === "receiving") {
     return (
       <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -470,7 +489,9 @@ export default function RandomToolsPage() {
                   <Download size={36} className="text-white" />
                 </div>
                 <h2 className="text-3xl font-bold text-white mb-2">Receiving File</h2>
-                <p className="text-slate-400">Connecting to sender...</p>
+                <p className="text-slate-400">
+                  {status === "waiting" ? "Connecting to sender..." : status === "connected" ? "Connected!" : "Establishing connection..."}
+                </p>
               </div>
 
               {status === "connected" && progress > 0 && (
@@ -525,7 +546,7 @@ export default function RandomToolsPage() {
     );
   }
 
-  // ----- UI: Sharing screen ----
+  // UI: Sharing screen
   if (step === "sharing") {
     return (
       <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 overflow-hidden">
@@ -553,62 +574,27 @@ export default function RandomToolsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <button
-                onClick={() => copyToClipboard(shareLink)}
-                className="bg-gradient-to-br from-green-600 to-green-700 rounded-full p-4 flex items-center justify-center transition-all shadow-lg hover:scale-105"
-                title="Copy link"
-              >
-                <Link size={20} className="text-white" />
-              </button>
-              <button
-                onClick={() => {
-                  // share via navigator.share if available
-                  if (navigator.share) {
-                    navigator
-                      .share({ title: "Share file", url: shareLink })
-                      .catch(() => {});
-                  } else {
-                    copyToClipboard(shareLink);
-                  }
-                }}
-                className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-full p-4 flex items-center justify-center transition-all shadow-lg hover:scale-105"
-                title="Native share / copy"
-              >
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => {
-                  // small convenience: open in new window (same page signalling demo)
-                  window.open(shareLink, "_blank");
-                }}
-                className="bg-gradient-to-br from-sky-500 to-sky-600 rounded-full p-4 flex items-center justify-center transition-all shadow-lg hover:scale-105"
-                title="Open share link"
-              >
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={() => copyToClipboard(shareLink)}
+              className="w-full mb-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-semibold transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              {copied ? <Check size={20} /> : <Link size={20} />}
+              {copied ? "Copied!" : "Copy Link"}
+            </button>
 
-            <div className="space-y-3 mb-6">
-              <label className="flex items-center gap-3 text-slate-300 hover:text-white transition cursor-pointer">
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-orange-500" />
-                <span className="text-sm">Share with nearby devices</span>
-              </label>
-              <label className="flex items-center gap-3 text-slate-300 hover:text-white transition cursor-pointer">
-                <input type="checkbox" defaultChecked className="w-5 h-5 accent-orange-500" />
-                <span className="text-sm">Use fallback when no direct connection can be made</span>
-              </label>
-            </div>
-
-            <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-yellow-500 font-semibold mb-2 flex items-center gap-2">⚠️ Please note:</p>
-              <p className="text-yellow-200 text-sm leading-relaxed">
-                Closing this page will stop sharing. Keep it open to continue.
+            <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-xl p-4 backdrop-blur-sm mb-4">
+              <p className="text-yellow-500 font-semibold mb-2 flex items-center gap-2">
+                ⚠️ Keep this page open
               </p>
+              <p className="text-yellow-200 text-sm leading-relaxed">
+                Closing this page will stop sharing. The connection is direct between devices.
+              </p>
+            </div>
+
+            <div className="text-center text-sm text-slate-400">
+              Status: <span className="text-orange-400 font-semibold">
+                {status === "waiting" ? "Waiting for connection..." : status === "connected" ? "Connected ✓" : "Disconnected"}
+              </span>
             </div>
 
             {status === "connected" && progress > 0 && (
@@ -631,7 +617,7 @@ export default function RandomToolsPage() {
     );
   }
 
-  // ----- Default upload UI -----
+  // Default upload UI
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -651,9 +637,8 @@ export default function RandomToolsPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`bg-slate-800/50 backdrop-blur-sm rounded-3xl border-4 border-dashed ${
-                isDragging ? "border-orange-500 bg-slate-700/50 scale-105" : "border-slate-600"
-              } p-16 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50 transition-all duration-300 shadow-2xl`}
+              className={`bg-slate-800/50 backdrop-blur-sm rounded-3xl border-4 border-dashed ${isDragging ? "border-orange-500 bg-slate-700/50 scale-105" : "border-slate-600"
+                } p-16 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50 transition-all duration-300 shadow-2xl`}
             >
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full mb-6 shadow-lg shadow-orange-500/50 animate-pulse">
@@ -670,13 +655,17 @@ export default function RandomToolsPage() {
               <h1 className="text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
                 Share files directly from your device
               </h1>
-              <p className="text-slate-300 text-xl">Send files of any size directly from your device without ever storing anything online.</p>
+              <p className="text-slate-300 text-xl">
+                Send files of any size directly from your device without ever storing anything online.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-4">
               <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 hover:border-orange-500 transition-all">
                 <div className="flex items-center gap-3 text-slate-300">
-                  <div className="bg-orange-500/10 p-2 rounded-lg"><Link size={20} className="text-orange-500" /></div>
+                  <div className="bg-orange-500/10 p-2 rounded-lg">
+                    <Link size={20} className="text-orange-500" />
+                  </div>
                   <span className="font-medium">No size limit</span>
                 </div>
               </div>

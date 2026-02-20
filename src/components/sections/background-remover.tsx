@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { removeBackground } from "@imgly/background-removal";
+import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import { Loader2, Download, RefreshCcw, Palette, Sparkles, Zap, Shield, Upload } from "lucide-react";
 
 export function BackgroundRemover() {
@@ -12,6 +11,8 @@ export function BackgroundRemover() {
   const [backgroundColor, setBackgroundColor] = useState("transparent");
   const [customColor, setCustomColor] = useState("#ffffff");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLibraryReady, setIsLibraryReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -49,10 +50,62 @@ export function BackgroundRemover() {
     }
   ];
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Initialize the library with proper configuration
+  useEffect(() => {
+    let mounted = true;
+
+    const initLibrary = async () => {
+      try {
+        // Dynamic import with proper error handling
+        const bgRemoval = await import("@imgly/background-removal");
+
+        if (!mounted) return;
+
+        // Preload the configuration
+        await bgRemoval.preload({
+          model: "isnet_fp16",
+        });
+
+        if (mounted) {
+          setIsLibraryReady(true);
+        }
+      } catch (err) {
+        console.error("Library initialization error:", err);
+        if (mounted) {
+          setError("Failed to initialize AI model. Please refresh the page.");
+        }
+      }
+    };
+
+    initLibrary();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!isLibraryReady) {
+      setError("AI model is still loading. Please wait a moment and try again.");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a valid image file');
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image size must be less than 10MB');
+      return;
+    }
+
+    setError(null);
     const reader = new FileReader();
     reader.onload = (event) => setOriginalImage(event.target?.result as string);
     reader.readAsDataURL(file);
@@ -61,20 +114,45 @@ export function BackgroundRemover() {
     setProgress(0);
     setProcessedImage(null);
 
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
+
     try {
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgress((prev) => (prev >= 90 ? prev : prev + 10));
       }, 300);
 
-      const imageBlob = await removeBackground(file);
-      clearInterval(progressInterval);
+      // Import and use the function
+      const { removeBackground } = await import("@imgly/background-removal");
+
+      const blob = await removeBackground(file, {
+        model: "isnet_fp16",
+        output: {
+          format: "image/png",
+          quality: 1,
+        },
+        progress: (key, current, total) => {
+          void key;
+          const percentage = total ? Math.round((current / total) * 100) : 0;
+          setProgress(Math.min(percentage, 90));
+        },
+      });
+
       setProgress(100);
 
-      const url = URL.createObjectURL(imageBlob);
+      const url = URL.createObjectURL(blob);
       setProcessedImage(url);
     } catch (err) {
-      alert("Error removing background. Please try another image.");
+      console.error('Background removal error:', err);
+      setError(
+        "Error removing background. This might be due to:\n" +
+        "1. Image format not supported\n" +
+        "2. Model files couldn't be loaded\n" +
+        "3. Browser compatibility issue\n\n" +
+        "Please try refreshing the page or using a different image."
+      );
+      setProgress(0);
     } finally {
+      if (progressInterval) clearInterval(progressInterval);
       setIsProcessing(false);
     }
   };
@@ -84,7 +162,7 @@ export function BackgroundRemover() {
     if (selected?.gradient) return { backgroundImage: selected.gradient };
     if (backgroundColor === "custom") return { backgroundColor: customColor };
     if (backgroundColor === "transparent")
-      return { 
+      return {
         backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)",
         backgroundSize: "20px 20px"
       };
@@ -102,7 +180,7 @@ export function BackgroundRemover() {
       canvas.height = img.height;
 
       if (backgroundColor === "transparent") {
-        
+        // Keep transparent
       } else if (backgroundColor === "gradient") {
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         gradient.addColorStop(0, "#667eea");
@@ -125,25 +203,38 @@ export function BackgroundRemover() {
           link.href = url;
           link.download = `bg-removed-${Date.now()}.png`;
           link.click();
+          URL.revokeObjectURL(url);
         }
-      });
+      }, 'image/png');
     };
     img.src = processedImage;
   };
 
   const handleReset = () => {
+    if (processedImage) {
+      URL.revokeObjectURL(processedImage);
+    }
     setOriginalImage(null);
     setProcessedImage(null);
     setProgress(0);
     setBackgroundColor("transparent");
     setShowColorPicker(false);
+    setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  useEffect(() => {
+    return () => {
+      if (processedImage) {
+        URL.revokeObjectURL(processedImage);
+      }
+    };
+  }, [processedImage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <canvas ref={canvasRef} style={{ display: "none" }} />
-      
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
@@ -164,29 +255,70 @@ export function BackgroundRemover() {
         </div>
       </div>
 
-      {/* =================== MAIN TOOL (UPLOAD SECTION) =================== */}
+      {/* Main Tool */}
       <div className="max-w-6xl mx-auto px-6 pb-16">
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
 
           {!originalImage ? (
             <div className="p-12">
-              <div className="border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all duration-200">
-                <input 
-                  ref={fileInputRef} 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageUpload} 
-                  className="hidden" 
-                  id="upload" 
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="font-medium text-red-700 whitespace-pre-line">{error}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="mt-3 text-sm text-red-600 underline hover:no-underline"
+                  >
+                    Refresh Page
+                  </button>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {!isLibraryReady && !error && (
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="animate-spin text-blue-600" size={20} />
+                    <div>
+                      <p className="font-medium text-blue-700">Loading AI Model...</p>
+                      <p className="text-sm text-blue-600 mt-1">This may take 10-60 seconds on first load (downloading the model & WASM files)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-200 ${isLibraryReady && !error
+                    ? 'border-gray-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50/30'
+                    : 'border-gray-200 opacity-50 cursor-not-allowed'
+                  }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="upload"
+                  disabled={!isLibraryReady || !!error}
                 />
-                <label htmlFor="upload" className="cursor-pointer flex flex-col items-center">
+                <label
+                  htmlFor="upload"
+                  className={`flex flex-col items-center ${isLibraryReady && !error ? 'cursor-pointer' : 'cursor-not-allowed'
+                    }`}
+                >
                   <div className="bg-gradient-to-br from-blue-500 to-purple-500 w-20 h-20 rounded-2xl flex items-center justify-center mb-4">
                     <Upload className="w-10 h-10 text-white" />
                   </div>
-                  <span className="text-2xl font-semibold text-gray-900 mb-2">Upload Your Image</span>
-                  <p className="text-gray-500 mb-4">Drag and drop or click to browse</p>
+                  <span className="text-2xl font-semibold text-gray-900 mb-2">
+                    {isLibraryReady ? "Upload Your Image" : "Preparing AI Model..."}
+                  </span>
+                  <p className="text-gray-500 mb-4">
+                    {isLibraryReady ? "Drag and drop or click to browse" : "Please wait while we load the background removal AI"}
+                  </p>
                   <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <span>Supports: PNG, JPG, JPEG</span>
+                    <span>Supports: PNG, JPG, JPEG, WebP</span>
                     <span>•</span>
                     <span>Max 10MB</span>
                   </div>
@@ -194,27 +326,41 @@ export function BackgroundRemover() {
               </div>
             </div>
           ) : (
-            
             <div className="p-8 space-y-8">
 
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="font-medium text-red-700 whitespace-pre-line">{error}</p>
+                  <button
+                    onClick={handleReset}
+                    className="mt-2 text-sm text-red-600 underline hover:no-underline"
+                  >
+                    Try another image
+                  </button>
+                </div>
+              )}
+
+              {/* Processing Progress */}
               {isProcessing && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
                   <div className="flex justify-between items-center text-blue-700 text-sm font-medium mb-3">
                     <div className="flex items-center gap-2">
                       <Loader2 className="animate-spin" size={16} />
-                      <span>Processing your image...</span>
+                      <span>Processing your image with AI...</span>
                     </div>
                     <span>{progress}%</span>
                   </div>
                   <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300 ease-out" 
-                      style={{ width: `${progress}%` }} 
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300 ease-out"
+                      style={{ width: `${progress}%` }}
                     />
                   </div>
                 </div>
               )}
 
+              {/* Image Comparison */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <h3 className="text-gray-900 font-semibold text-sm uppercase tracking-wider">Original Image</h3>
@@ -234,7 +380,7 @@ export function BackgroundRemover() {
                         onClick={() => setShowColorPicker(!showColorPicker)}
                         className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all text-sm font-medium"
                       >
-                        <Palette size={16} /> 
+                        <Palette size={16} />
                         <span>Change Background</span>
                       </button>
                     )}
@@ -249,10 +395,12 @@ export function BackgroundRemover() {
                       <div className="flex flex-col items-center justify-center h-full bg-gray-50">
                         <Loader2 className="animate-spin text-blue-500 w-12 h-12 mb-4" />
                         <p className="text-gray-500 font-medium">Removing background...</p>
+                        <p className="text-gray-400 text-sm mt-2">This may take 10-20 seconds</p>
                       </div>
                     )}
                   </div>
 
+                  {/* Color Picker */}
                   {showColorPicker && processedImage && (
                     <div className="p-5 border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-sm">
                       <h4 className="font-semibold text-gray-900 mb-3 text-sm">Choose Background Color</h4>
@@ -261,19 +409,18 @@ export function BackgroundRemover() {
                           <button
                             key={color.value}
                             onClick={() => setBackgroundColor(color.value)}
-                            className={`w-12 h-12 rounded-xl border-2 transition-all hover:scale-110 ${
-                              backgroundColor === color.value 
-                                ? "border-blue-500 ring-4 ring-blue-200 scale-110" 
+                            className={`w-12 h-12 rounded-xl border-2 transition-all hover:scale-110 ${backgroundColor === color.value
+                                ? "border-blue-500 ring-4 ring-blue-200 scale-110"
                                 : "border-gray-300 hover:border-gray-400"
-                            }`}
+                              }`}
                             style={
                               color.gradient
                                 ? { backgroundImage: color.gradient }
-                                : { 
-                                    backgroundColor: color.value === "transparent" ? "white" : color.value,
-                                    backgroundImage: color.value === "transparent" ? "repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)" : "none",
-                                    backgroundSize: "10px 10px"
-                                  }
+                                : {
+                                  backgroundColor: color.value === "transparent" ? "white" : color.value,
+                                  backgroundImage: color.value === "transparent" ? "repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)" : "none",
+                                  backgroundSize: "10px 10px"
+                                }
                             }
                             title={color.name}
                           />
@@ -309,12 +456,13 @@ export function BackgroundRemover() {
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 <button
                   onClick={handleReset}
                   className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium"
                 >
-                  <RefreshCcw size={18} /> 
+                  <RefreshCcw size={18} />
                   <span>Upload New Image</span>
                 </button>
 
@@ -323,7 +471,7 @@ export function BackgroundRemover() {
                     onClick={handleDownload}
                     className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all font-medium shadow-lg hover:shadow-xl"
                   >
-                    <Download size={18} /> 
+                    <Download size={18} />
                     <span>Download Image</span>
                   </button>
                 )}
@@ -334,7 +482,7 @@ export function BackgroundRemover() {
         </div>
       </div>
 
-      {/* ================== FEATURES SECTION MOVED DOWN HERE ================== */}
+      {/* Features Section */}
       {!originalImage && (
         <div className="max-w-6xl mx-auto px-6 mb-16">
           <div className="grid md:grid-cols-4 gap-6">
@@ -350,7 +498,6 @@ export function BackgroundRemover() {
           </div>
         </div>
       )}
-      {/* ================================================================ */}
 
       {/* Benefits Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
