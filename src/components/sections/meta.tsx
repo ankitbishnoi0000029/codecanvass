@@ -10,7 +10,7 @@ const Meta = (selectedData: any) => {
                 <div className="bg-gray-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm mb-4">
                     <h3 className="text-sm font-semibold text-blue-700 mb-1">Description</h3>
                     <p className="text-gray-700 text-sm leading-relaxed">
-                        { selectedData?.selectedData.des || selectedData?.selectedData?.description}
+                        { selectedData?.des || selectedData?.description}
                     </p>
                 </div>
 
@@ -19,7 +19,7 @@ const Meta = (selectedData: any) => {
                 <strong className="block mb-2">Keywords:</strong>
 
                 <div className="flex flex-wrap gap-2">
-                        {selectedData?.selectedData?.keyword
+                        {selectedData?.keyword
         ?.split(",")
                         .map((kw: string, index: number) => (
                             <span
