@@ -2,7 +2,6 @@
 
 
 const Meta = (selectedData: any) => {
-    console.log(selectedData)
     return (
         <div className="my-auto">
         

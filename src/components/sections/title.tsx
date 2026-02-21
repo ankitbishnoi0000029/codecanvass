@@ -1,5 +1,4 @@
 export const PageTitle = (selectedData: any) => {
-    console.log(selectedData)
   return (
       <div className="mb-6 p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
           {/* Title */}
