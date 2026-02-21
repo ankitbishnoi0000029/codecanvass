@@ -117,7 +117,7 @@ export default function Page() {
     );
 
     const handleToolChange = (toolId: string) => {
-        router.push(`/popular/${toolId}`); // ✅ FIXED
+        router.replace(`/popular/${toolId}`); // ✅ FIXED
     };
 
     /* ---------- CONVERT ---------- */

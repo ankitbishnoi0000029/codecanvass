@@ -117,7 +117,7 @@ export default function Page() {
     );
 
     const handleToolChange = (toolId: string) => {
-        router.push(`/tools/${toolId}`); // ✅ FIXED
+        router.replace(`/tools/${toolId}`); // ✅ FIXED
     };
 
     /* ---------- CONVERT ---------- */

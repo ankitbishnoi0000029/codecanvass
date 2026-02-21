@@ -79,7 +79,7 @@ export function Trandingtool() {
     // ==============================
     const handleToolChange = (slug: string) => {
         setSelectedTool(slug)
-        router.push(`/trendingtool/${slug}`)
+        router.replace(`/trendingtool/${slug}`)
     }
 
     // ==============================

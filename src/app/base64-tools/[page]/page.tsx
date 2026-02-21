@@ -5,6 +5,8 @@ import { MetaData } from "@/utils/types/uiTypes"
 import { Metadata } from "next";
 import { getMeta } from "@/actions/dbAction";
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ page: string }>
 }
@@ -12,7 +14,12 @@ interface PageProps {
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const { params } = await props;
   const { page } = await params;
-  const data = await getMeta("base64_tools", page);
+  let data = null;
+  try {
+    data = await getMeta("base64_tools", page);
+  } catch (error) {
+    console.error('Failed to fetch metadata:', error);
+  }
   
   
   

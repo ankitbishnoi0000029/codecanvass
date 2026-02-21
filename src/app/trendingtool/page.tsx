@@ -4,6 +4,8 @@ import { MetaData } from "@/utils/types/uiTypes";
 import { getMeta } from "@/actions/dbAction";
 import { Trandingtool } from '@/components/sections/trandingtool';
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ page: string }>;
 }
@@ -11,7 +13,12 @@ interface PageProps {
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const { params } = await props;
   const { page } = await params;
-  const data = await getMeta("trendingtools", page);
+  let data = null;
+  try {
+    data = await getMeta("trendingtools", page);
+  } catch (error) {
+    console.error('Failed to fetch metadata:', error);
+  }
 
   if (!data) {
     return {
