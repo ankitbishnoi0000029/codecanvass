@@ -17,7 +17,6 @@ export function XmlFormatterPage() {
   try {
     const response = await getNavbar('xml');
     setList(response);
-    console.log("Navbar data:", response); // yaha log karo
   } catch (error) {
     console.error("Fetch error:", error);
   }

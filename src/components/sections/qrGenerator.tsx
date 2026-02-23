@@ -21,7 +21,6 @@ export function QRGenerator() {
     try {
       const response = await getNavbar('qr');
       setList(response);
-      console.log("Navbar data:", response); // yaha log karo
     } catch (error) {
       console.error("Fetch error:", error);
     }

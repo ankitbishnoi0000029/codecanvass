@@ -19,7 +19,6 @@ function JsonFormatterTool() {
   try {
     const response = await getNavbar('json');
     setList(response);
-    console.log("Navbar data:", response); // yaha log karo
   } catch (error) {
     console.error("Fetch error:", error);
   }

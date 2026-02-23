@@ -24,7 +24,6 @@ const [list , setList] = useState<dataType[]>([])
   try {
     const response = await getNavbar('bg');
     setList(response);
-    console.log("Navbar data:", response); // yaha log karo
   } catch (error) {
     console.error("Fetch error:", error);
   }

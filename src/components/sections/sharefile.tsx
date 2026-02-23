@@ -46,7 +46,6 @@ export default function FileSharePage() {
     try {
       const response = await getNavbar('fst');
       setList(response);
-      console.log("Navbar data:", response); // yaha log karo
     } catch (error) {
       console.error("Fetch error:", error);
     }
