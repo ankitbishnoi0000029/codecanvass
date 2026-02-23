@@ -2,36 +2,52 @@
 
 
 const Meta = (selectedData: any) => {
+
+    const description = selectedData?.des || selectedData?.selectedData?.des || selectedData?.selectedData?.description || selectedData?.description;
+
+    const keywordString =
+        selectedData?.selectedData?.keyword ||
+        selectedData?.keyword;
+
+    const keywords = keywordString
+        ? keywordString.split(",")
+        : [];
+
     return (
-        <div className="my-auto">
-        
-        <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
-                <div className="bg-gray-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm mb-4">
-                    <h3 className="text-sm font-semibold text-blue-700 mb-1">Description</h3>
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                        { selectedData?.des || selectedData?.description}
+        <div className="w-full mx-auto my-16 px-4">
+
+            <div className="relative overflow-hidden rounded-3xl bg-white shadow-2xl border border-gray-200 p-8">
+
+                {/* Soft Gradient Glow */}
+                <div className="absolute -top-24 -right-24 w-80 h-80 bg-gradient-to-br from-purple-500 to-blue-500 opacity-10 rounded-full blur-3xl"></div>
+
+                {/* Description Section */}
+                <div className="relative z-10 mb-10">
+
+                    <p className="text-gray-600 text-base leading-relaxed bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner">
+                        {description}
                     </p>
                 </div>
 
+                {/* Keywords Section */}
+                <div className="relative z-10">
+                   
 
-            <div>
-                <strong className="block mb-2">Keywords:</strong>
-
-                <div className="flex flex-wrap gap-2">
-                        {selectedData?.keyword
-        ?.split(",")
-                        .map((kw: string, index: number) => (
+                    <div className="flex flex-wrap gap-3">
+                        {keywords.map((kw: string, index: number) => (
                             <span
                                 key={index}
-                                className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition ">
+                                className="px-4 py-2 text-sm font-medium rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200"
+                            >
                                 {kw.trim()}
                             </span>
                         ))}
+                    </div>
                 </div>
-            </div>
+
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Meta
+export default Meta;

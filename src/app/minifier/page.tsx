@@ -1,26 +1,22 @@
 import { Minifier } from "@/components/sections/minifier";
+import { buildMetadata } from "@/utils/seo/metdata";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Minifier | CodeBeauty",
-  description: "Minify your code and files to reduce size and improve performance. Minify CSS, JavaScript, HTML, and more.",
-  keywords: "minifier, code minifier, css minifier, js minifier, html minifier",
-  openGraph: {
-    title: "Minifier | CodeBeauty",
-    description: "Minify your code and files to reduce size and improve performance. Minify CSS, JavaScript, HTML, and more.",
-    url: "https://codebeauty.com/minifier",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Minifier | CodeBeauty",
-    description: "Minify your code and files to reduce size and improve performance. Minify CSS, JavaScript, HTML, and more.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/minifier",
-  },
-};
+interface PageProps {
+  params: Promise<{ tools: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tools } = await params;
+  return buildMetadata({
+    table: "minifier",
+    urlId: tools,
+    route: `${tools}`,
+    fallbackTitle:       " Converters Online",
+    fallbackDescription: "Free online  converters to process and convert  data instantly.",
+    fallbackKeywords:    " converter,  tools,  editor, online  tools",
+  });
+}
+
 
 export default function minifierPage() {
   return (

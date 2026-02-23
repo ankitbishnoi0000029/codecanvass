@@ -38,10 +38,22 @@ export interface fromDataType {
 }
 
 export interface MetaData {
-  title?: string;
-  description?: string;
-  keywords?: string;
-  ogImage?: string;
+  title: string;
+  description: string;
+  keywords: string;
+  // OG Tags
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  ogType: string;
+  ogUrl: string;
+  // Page Content
+  pageContent: string;
+  // Image
+  imageAlt: string;
+  imageFileName: string;
+  // URL
+  urlSlug: string;
 }
 export interface CategoryItem {
   id: string;

@@ -10,7 +10,6 @@ import {
   NavigationMenuLink,
 } from "../ui/navigation-menu";
 import Link from "next/link";
-import { getTableData } from "@/actions/dbAction";
 
 interface Category {
   id: string | number;
@@ -24,38 +23,24 @@ interface Subcategory {
   category_id: string | number;
 }
 
-export function SubNavbar() {
+export function SubNavbar({ categoriesData, subcategoriesData }: { categoriesData: Category[], subcategoriesData: Subcategory[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>();
-  const [subcategories, setSubCategories] = useState<any[]>();
+  const [categories, setCategories] = useState<any[]>(categoriesData);
+  const [subcategories, setSubCategories] = useState<any[]>(subcategoriesData);
 
-  const fetchData = async () => {
-    try {
-      const categoriesData = await getTableData("categories") as Category[];
-      setCategories(categoriesData);
-      const subcategoriesData = await getTableData("subcategories") as Subcategory[];
-      setSubCategories(subcategoriesData);
-    } catch (error) {
-      console.warn("Database connection failed during build, using fallback data:", error);
-      // Provide fallback empty arrays to prevent build failure
-      setCategories([]);
-      setSubCategories([]);
-    }
-  };
   // Fetch categories & subcategories
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 30);
     window.addEventListener("scroll", handleScroll);
-       fetchData();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Merge subcategories inside categories
-  const mergedCategories = (categories || []).map((cat) => ({
+  const mergedCategories = categories.map((cat) => ({
     ...cat,
-    subcategories: (subcategories || []).filter(
+    subcategories: subcategories.filter(
       (sub) => sub.category_id === cat.id
     ),
   }));

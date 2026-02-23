@@ -172,7 +172,7 @@ export function Base64Tools() {
     >
       <SidebarContentWrapper selectedOption={selectedOption as unknown as SidebarOption | undefined}>
         <div className="mx-auto space-y-6">
-          <PageTitle selectedData={selectedOption} />
+          <PageTitle selectedData={selectedOption || undefined} />
 
           {/* Input + Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

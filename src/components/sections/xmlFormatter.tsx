@@ -1,5 +1,8 @@
 "use client"
-import React, { useState, useRef } from 'react';
+import { getNavbar } from '@/actions/dbAction';
+import { dataType } from '@/utils/types/uiTypes';
+import React, { useState, useRef, useEffect } from 'react';
+import Meta from './meta';
 
 export function XmlFormatterPage() {
   const [inputXml, setInputXml] = useState('');
@@ -8,6 +11,23 @@ export function XmlFormatterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef(null);
+  const [list , setList] = useState<dataType[]>([])
+
+ const fetchData = async () => {
+  try {
+    const response = await getNavbar('xml');
+    setList(response);
+    console.log("Navbar data:", response); // yaha log karo
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputXml(e.target.value);
@@ -449,6 +469,9 @@ export function XmlFormatterPage() {
             Clear All
           </button>
         </div>
+        <div className="mt-8 text-center text-gray-600 text-sm">
+        <Meta selectedData={list} />
+      </div>
       </main>
     </div>
   );

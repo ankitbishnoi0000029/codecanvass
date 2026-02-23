@@ -1,4 +1,4 @@
-import { HtmlConverters } from "@/components/sections/html-converters";
+import XmlConverters from "@/components/sections/xml-converters";
 import type { Metadata } from "next";
 import { buildMetadata } from "@/utils/seo/metdata";
 
@@ -8,7 +8,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { tool } = await params;
   return buildMetadata({
-    table: "html_converters",
+    table: "xml_converters",
     urlId: tool,
     route: `${tool}`,
     fallbackTitle:       "XML Converters Online",
@@ -18,12 +18,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 
-
-export default function htmlconvertersPage() {
-  return (
-    <HtmlConverters />
-    
-  );
+export default function Page() {
+  return <XmlConverters />;
 }
-
-

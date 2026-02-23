@@ -1,26 +1,17 @@
 import { VideoDownloder } from "@/components/sections/videodownloder";
-import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Video Downloader | CodeBeauty",
-  description: "Download videos from various platforms with our powerful video downloader tool.",
-  keywords: "video downloader, youtube downloader, video download, online video downloader",
-  openGraph: {
-    title: "Video Downloader | CodeBeauty",
-    description: "Download videos from various platforms with our powerful video downloader tool.",
-    url: "https://codebeauty.com/videodownloder",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Video Downloader | CodeBeauty",
-    description: "Download videos from various platforms with our powerful video downloader tool.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/videodownloder",
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    table: "navbar",
+    urlId: 'videodownloder',
+    route: `/videodownloder`,
+    fallbackTitle:       "Background Remover Online",
+    fallbackDescription: "Free online background remover to remove backgrounds from images instantly.",
+    fallbackKeywords:    "background remover, background removal, online background remover, image editor",
+  });
+}
+
 
 export default function Page() {
   return (

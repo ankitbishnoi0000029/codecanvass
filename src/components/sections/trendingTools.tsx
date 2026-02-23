@@ -37,7 +37,7 @@ export function TrendingTools() {
           {data.map((tool) => (
             <Link
               key={tool.id}
-              href={tool.route || ''}
+              href={`trendingtool/${tool.route} || ''`}
               // onClick={() => router.push(`/${tool.route}`)}
               className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] focus:outline-none"
             >
@@ -52,7 +52,7 @@ export function TrendingTools() {
 
                 {/* Title */}
                 <h3 className="text-base font-semibold text-slate-900 mb-2 line-clamp-2">
-                  {tool.name}
+                  {tool.urlName}
                 </h3>
 
                 {/* Description */}

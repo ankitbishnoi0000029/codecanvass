@@ -1,61 +1,23 @@
-import React from 'react'
 import type { Metadata } from "next";
-import { MetaData } from "@/utils/types/uiTypes";
-import { getMeta } from "@/actions/dbAction";
-import { Trandingtool } from '@/components/sections/trandingtool';
+import { buildMetadata } from "@/utils/seo/metdata";
+import { Trandingtool } from "@/components/sections/trandingtool";
 
-// interface PageProps {
-//   params: Promise<{ page: string }>;
-// }
 
-// export async function generateMetadata(props: PageProps): Promise<Metadata> {
-//   const { params } = await props;
-//   const { page } = await params;
-//   const data = await getMeta("trendingtools", page);
+interface PageProps {
+  params: Promise<{ page: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { page } = await params;
+  return buildMetadata({
+    table: "trendingtools",
+    urlId: page,
+    route: `${page}`,
+    fallbackTitle:       " Converters Online",
+    fallbackDescription: "Free online  converters to process and convert  data instantly.",
+    fallbackKeywords:    " converter,  pages,  editor, online  pages",
+  });
+}
 
-//   if (!data) {
-//     return {
-//       title: "Trending Tool Not Found | CodeBeauty",
-//       description: "The requested trending tool does not exist.",
-//     };
-//   }
-
-//   let meta: MetaData = {};
-//   if (typeof data === "string") {
-//     try {
-//       meta = JSON.parse(data || "{}");
-//     } catch (e) {
-//       // If parsing fails, meta remains empty
-//     }
-//   } else if (typeof data === "object" && data !== null) {
-//     meta = { ...data } as MetaData;
-//   }
-//   const title = meta.title || "Trending Tool";
-//   const description = meta.description || "Explore trending tools and utilities on CodeBeauty.";
-//   const keywords = meta.keywords || "trending tools, popular tools, featured tools";
-
-//   return {
-//     title: `${title} | CodeBeauty`,
-//     description,
-//     keywords,
-//     openGraph: {
-//       title: `${title} | CodeBeauty`,
-//       description,
-//       url: `https://codebeauty.com/trendingtool/${page}`,
-//       type: "website",
-//       siteName: "CodeBeauty",
-//       ...(meta.ogImage && { images: [{ url: meta.ogImage }] }),
-//     },
-//     twitter: {
-//       card: "summary_large_image",
-//       title: `${title} | CodeBeauty`,
-//       description,
-//     },
-//     alternates: {
-//       canonical: `https://codebeauty.com/trendingtool/${page}`,
-//     },
-//   };
-// }
 
 const page = () => {
   return (

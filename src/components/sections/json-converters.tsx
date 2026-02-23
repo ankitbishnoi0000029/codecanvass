@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Settings, Palette, Download, RotateCcw } from "lucide-react"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
+import { usePathname, useRouter } from "next/navigation"
 
 // Helper function to get file extension for download
 const getFileExtension = (converterId: string): string => {
@@ -77,16 +78,14 @@ const jsonToTable = (json: string, delimiter: ',' | '\t'): string => {
 
   if (arr.length === 0) return ''
 
-  // Get all unique keys from all objects
   const keys = Array.from(
-    new Set(arr.flatMap(obj => Object.keys(obj)))
-  )
+    new Set(arr.flatMap((obj: any) => Object.keys(obj)))
+  ) as string[]
 
   const headers = keys.join(delimiter)
-  const rows = arr.map(obj =>
+  const rows = arr.map((obj: any) =>
     keys.map(key => {
       const value = obj[key]
-      // Handle strings with delimiters by quoting
       if (typeof value === 'string' && (value.includes(delimiter) || value.includes('"'))) {
         return `"${value.replace(/"/g, '""')}"`
       }
@@ -105,11 +104,11 @@ const jsonToHtml = (json: string): string => {
   if (arr.length === 0) return '<table></table>'
 
   const keys = Array.from(
-    new Set(arr.flatMap(obj => Object.keys(obj)))
-  )
+    new Set(arr.flatMap((obj: any) => Object.keys(obj)))
+  ) as string[]
 
   const headers = keys.map(k => `<th>${k}</th>`).join('')
-  const rows = arr.map(obj => {
+  const rows = arr.map((obj: any) => {
     const cells = keys.map(key => {
       const value = obj[key]
       return `<td>${value !== undefined ? value : ''}</td>`
@@ -181,19 +180,50 @@ export function JsonConverters() {
   const [error, setError] = useState<string>("")
   const [list, setList] = useState<dataType[]>([])
 
-  // Fetch SQL Tools
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // ✅ Fetch data and sync selected converter from URL
   useEffect(() => {
     const fetchData = async () => {
       const categoriesData = await getTableData("json_converters") as dataType[]
       setList(categoriesData)
 
-      // Set first converter as default
-      if (categoriesData.length > 0) {
-        setSelectedConverter(categoriesData[0].route || categoriesData[0].id.toString())
+      // Read slug from current URL
+      const slug = pathname.split('/').pop() ?? ''
+
+      if (slug) {
+        // Try to match URL slug with a route in the list
+        const matched = categoriesData.find(
+          (item) => item.route === slug || item.id.toString() === slug
+        )
+
+        if (matched) {
+          // ✅ Valid route found — select it
+          setSelectedConverter(matched.route ?? matched.id.toString())
+        } else if (categoriesData.length > 0) {
+          // ✅ No match — fall back to first item and redirect
+          const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString()
+          setSelectedConverter(firstRoute)
+          router.replace(firstRoute)
+        }
+      } else if (categoriesData.length > 0) {
+        // ✅ No slug — default to first item
+        const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString()
+        setSelectedConverter(firstRoute)
+        router.replace(firstRoute)
       }
     }
+
     fetchData()
-  }, [])
+  }, [pathname]) // ✅ Re-runs on browser back/forward navigation
+
+  // Reset input/output when converter changes
+  useEffect(() => {
+    setInputText("")
+    setOutputText("")
+    setError("")
+  }, [selectedConverter])
 
   // Convert SQL data to SidebarOption format
   const sidebarOptions: SidebarOption[] = list.map((item) => ({
@@ -208,53 +238,44 @@ export function JsonConverters() {
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
-  // Get selected SQL Item
+  // Get selected item
   const selectedOption = list.find(
     (opt) => (opt.route && opt.route === selectedConverter) || opt.id.toString() === selectedConverter
   ) || null
 
-  useEffect(() => {
-    setInputText("")
-    setOutputText("")
-    setError("")
-  }, [selectedConverter])
+  // ✅ Handle sidebar option click — update state + push URL
+  const handleOptionSelect = (optionId: string | number) => {
+    const id = optionId.toString()
+    setSelectedConverter(id)
+    router.push(id)
+  }
 
   // Conversion Logic
   const convertJson = (json: string, converterId: string): string => {
     try {
-      // Validate JSON
       if (!json.trim()) {
         throw new Error("Please enter JSON to convert")
       }
 
-      // Try to parse to validate
       JSON.parse(json)
 
       switch (converterId) {
         case "json-to-java":
           return jsonToJava(json)
-
         case "json-to-xml":
           return jsonToXml(JSON.parse(json))
-
         case "json-to-yaml":
           return jsonToYaml(JSON.parse(json))
-
         case "json-to-csv":
           return jsonToTable(json, ',')
-
         case "json-to-tsv":
           return jsonToTable(json, '\t')
-
         case "json-to-text":
           return JSON.stringify(JSON.parse(json), null, 2)
-
         case "json-to-excel":
           return "Excel export requires server-side processing. For now, you can download as CSV and open in Excel."
-
         case "json-to-html":
           return jsonToHtml(json)
-
         default:
           return "Unsupported converter"
       }
@@ -310,7 +331,7 @@ export function JsonConverters() {
       icon={Palette}
       options={sidebarOptions}
       selectedOption={selectedConverter}
-      onOptionSelect={setSelectedConverter}
+      onOptionSelect={handleOptionSelect}  // ✅ Now updates URL on selection
       footerOptions={footerOptions}
     >
       <SidebarContentWrapper selectedOption={selectedOption as any}>
@@ -398,7 +419,6 @@ export function JsonConverters() {
 
             <div>
               <strong className="block mb-2">Keywords:</strong>
-
               <div className="flex flex-wrap gap-2">
                 {selectedOption.keyword
                   ?.split(",")
@@ -406,7 +426,7 @@ export function JsonConverters() {
                   .map((kw, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition ">
+                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition">
                       {kw.trim()}
                     </span>
                   ))}

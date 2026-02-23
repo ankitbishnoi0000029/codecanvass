@@ -14,6 +14,7 @@ import { format } from "prettier/standalone";
 import prettierPluginXml from "@prettier/plugin-xml";
 import Meta from "./meta";
 import { PageTitle } from "./title";
+import { usePathname, useRouter } from "next/navigation";
 
 // Helper function to get file extension for download
 const getFileExtension = (converterId: string): string => {
@@ -463,6 +464,8 @@ export default function XmlConverters() {
   const [xpathQuery, setXpathQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [list, setList] = useState<dataType[]>([]);
+const router = useRouter()
+  const pathname = usePathname()
 
   // Fetch converter list
   useEffect(() => {
@@ -470,12 +473,34 @@ export default function XmlConverters() {
       const categoriesData = await getTableData("xml_converters") as dataType[];
       setList(categoriesData);
 
-      // Set first converter as default
-      if (categoriesData.length > 0) {
-        setSelectedConverter(categoriesData[0].route || categoriesData[0].id.toString());
+      // Read slug from current URL
+      const slug = pathname.split('/').pop() ?? ''
+
+      if (slug) {
+        // Try to match URL slug with a route in the list
+        const matched = categoriesData.find(
+          (item) => item.route === slug || item.id.toString() === slug
+        )
+
+        if (matched) {
+          // ✅ Valid route found — select it
+          setSelectedConverter(matched.route ?? matched.id.toString())
+        } else if (categoriesData.length > 0) {
+          // ✅ No match — fall back to first item and redirect
+          const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString()
+          setSelectedConverter(firstRoute)
+          router.replace(firstRoute)
+        }
+      } else if (categoriesData.length > 0) {
+        // ✅ No slug — default to first item
+        const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString()
+        setSelectedConverter(firstRoute)
+        router.replace(firstRoute)
       }
     };
     fetchData();
+
+    
   }, []);
 
   // Convert SQL data → SidebarOption[]
@@ -501,6 +526,7 @@ export default function XmlConverters() {
     setInputText("");
     setOutputText("");
     setXpathQuery("");
+    router.push(converterId)
   };
 
   // Main conversion logic

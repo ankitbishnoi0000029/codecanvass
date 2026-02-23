@@ -91,7 +91,6 @@ export default function Page() {
             .then((res) => setList(res as dataType[]))
             .finally(() => setLoading(false));
     }, []);
-    console.log(list)
     /* ---------- GET TOOL FROM URL ---------- */
     useEffect(() => {
         const slug = pathname.split("/").pop() || "";

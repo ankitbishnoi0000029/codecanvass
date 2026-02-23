@@ -1,65 +1,27 @@
+import { StringUtilities } from "@/components/sections/string-utilities";
 import type { Metadata } from "next";
-import { MetaData } from "@/utils/types/uiTypes";
-import { getMeta } from "@/actions/dbAction";
 
-interface PageProps {
-  params: Promise<{ tool: string }>;
-}
+export const metadata: Metadata = {
+  title: "String Utilities | CodeBeauty",
+  description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
+  keywords: "string utilities, string tools, text processing, string manipulation",
+  openGraph: {
+    title: "String Utilities | CodeBeauty",
+    description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
+    url: "https://codebeauty.com/string-utilities",
+    type: "website",
+    siteName: "CodeBeauty",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "String Utilities | CodeBeauty",
+    description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
+  },
+  alternates: {
+    canonical: "https://codebeauty.com/string-utilities",
+  },
+};
 
-export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const { params } = await props;
-  const { tool } = await params;
-  const data = await getMeta("string_utilities", tool);
-
-  if (!data) {
-    return {
-      title: "String Utility Tool Not Found | CodeBeauty",
-      description: "The requested string utility tool does not exist.",
-    };
-  }
-
-  let meta: MetaData = {};
-  if (typeof data === "string") {
-    try {
-      meta = JSON.parse(data || "{}");
-    } catch (e) {
-      // If parsing fails, meta remains empty
-    }
-  } else if (typeof data === "object" && data !== null) {
-    meta = { ...data } as MetaData;
-  }
-  const title = meta.title || "String Utility Tool";
-  const description = meta.description || "Process and manipulate strings with our powerful string utility tools.";
-  const keywords = meta.keywords || "string utilities, string tools, text processing";
-
-  return {
-    title: `${title} | CodeBeauty`,
-    description,
-    keywords,
-    openGraph: {
-      title: `${title} | CodeBeauty`,
-      description,
-      url: `https://codebeauty.com/string-utilities/${tool}`,
-      type: "website",
-      siteName: "CodeBeauty",
-      ...(meta.ogImage && { images: [{ url: meta.ogImage }] }),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} | CodeBeauty`,
-      description,
-    },
-    alternates: {
-      canonical: `https://codebeauty.com/string-utilities/${tool}`,
-    },
-  };
-}
-
-export default function ToolPage() {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Dynamic Tool Page</h1>
-      <p>This is a dynamic tool page for string-utilities.</p>
-    </div>
-  );
+export default function Page() {
+  return <StringUtilities />
 }

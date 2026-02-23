@@ -1,6 +1,9 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react";
 import { Upload, X, Check, Download, Link } from "lucide-react";
+import { dataType } from "@/utils/types/uiTypes";
+import { getNavbar } from "@/actions/dbAction";
+import Meta from "./meta";
 
 interface ReceivedFile {
   blob: Blob;
@@ -37,6 +40,21 @@ export default function FileSharePage() {
   const wsRef = useRef<WebSocket | null>(null);
   const peerIdRef = useRef("");
   const remoteIdRef = useRef("");
+ const [list , setList] = useState<dataType[]>([])
+  
+   const fetchData = async () => {
+    try {
+      const response = await getNavbar('fst');
+      setList(response);
+      console.log("Navbar data:", response); // yaha log karo
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const id = Math.random().toString(36).substring(2, 15);
@@ -619,6 +637,7 @@ export default function FileSharePage() {
 
   // Default upload UI
   return (
+    <>
     <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -704,5 +723,7 @@ export default function FileSharePage() {
         </div>
       </div>
     </div>
+       <Meta selectedData={list} />
+       </>
   );
 }

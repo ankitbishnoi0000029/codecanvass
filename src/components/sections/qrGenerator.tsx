@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, Globe, FileText, FileImage, Sparkles, Zap, Shield, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import Meta from "./meta";
+import { dataType } from "@/utils/types/uiTypes";
+import { getNavbar } from "@/actions/dbAction";
 
 export function QRGenerator() {
   const [activeTab, setActiveTab] = useState("website");
@@ -11,6 +14,22 @@ export function QRGenerator() {
   const [textColor, setTextColor] = useState("#0f172a");
   const [qrColor, setQrColor] = useState("#111111");
   const [bgColor, setBgColor] = useState("#ffffff");
+
+  const [list , setList] = useState<dataType[]>([])
+  
+   const fetchData = async () => {
+    try {
+      const response = await getNavbar('qr');
+      setList(response);
+      console.log("Navbar data:", response); // yaha log karo
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const tabs = [
     { id: "website", label: "Website", icon: Globe },
@@ -349,6 +368,7 @@ export function QRGenerator() {
           </p>
         </div>
       </div>
+      <Meta selectedData={list} />
     </div>
   );
 }

@@ -1,34 +1,32 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   ReusableSidebar,
   SidebarContentWrapper,
   SidebarOption,
-} from "@/components/ui/reusable-sidebar";
-import { Button } from "@/components/ui/button";
-import { Download, Settings, Palette } from "lucide-react";
-import { getTableData } from "@/actions/dbAction";
-import { dataType } from "@/utils/types/uiTypes";
-import Meta from "./meta";
+} from '@/components/ui/reusable-sidebar';
+import { Button } from '@/components/ui/button';
+import { Download, Settings, Palette } from 'lucide-react';
+import { getTableData } from '@/actions/dbAction';
+import { dataType } from '@/utils/types/uiTypes';
+import Meta from './meta';
 
-import { PageTitle } from "./title";
+import { PageTitle } from './title';
 
 export function SqlConverter() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [selectedConverter, setSelectedConverter] = useState<string>("");
-  const [inputValue, setInputValue] = useState("");
-  const [output, setOutput] = useState("");
+  const [selectedConverter, setSelectedConverter] = useState<string>('');
+  const [inputValue, setInputValue] = useState('');
+  const [output, setOutput] = useState('');
   const [list, setList] = useState<dataType[] | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const categoriesData = (await getTableData(
-        "sql_converters"
-      )) as dataType[];
+      const categoriesData = (await getTableData('sql_converters')) as dataType[];
       setList(categoriesData);
     };
     fetchData();
@@ -36,31 +34,29 @@ export function SqlConverter() {
 
   // Get slug from URL
   useEffect(() => {
-    const slug = pathname.split("/").pop() ?? "";
+    const slug = pathname.split('/').pop() ?? '';
     setSelectedConverter(slug);
-    setInputValue("");
-    setOutput("");
+    setInputValue('');
+    setOutput('');
   }, [pathname]);
 
   const converterOptions: SidebarOption[] =
     list?.map((item) => ({
-      id: item.route ?? "", // ensure id is always a string
+      id: item.route ?? '', // ensure id is always a string
       label: item.urlName,
       description: item.des,
       icon: Palette,
     })) || [];
 
   const selectedData: dataType =
-    list?.find((i) => i.route === selectedConverter) ?? {} as dataType;
+    list?.find((i) => i.route === selectedConverter) ?? ({} as dataType);
 
-  const selectedOption = converterOptions.find(
-    (opt) => opt.id === selectedConverter
-  );
+  const selectedOption = converterOptions.find((opt) => opt.id === selectedConverter);
 
   const footerOptions: SidebarOption[] = [
     {
-      id: "settings",
-      label: "Settings",
+      id: 'settings',
+      label: 'Settings',
       icon: Settings,
     },
   ];
@@ -74,18 +70,13 @@ export function SqlConverter() {
   ---------------------------*/
 
   const parseInsertSQL = (sql: string) => {
-    const match =
-      sql.match(/INSERT INTO\s+.+?\((.+?)\)\s+VALUES\s*\((.+?)\)/i);
+    const match = sql.match(/INSERT INTO\s+.+?\((.+?)\)\s+VALUES\s*\((.+?)\)/i);
 
     if (!match) return null;
 
-    const columns = match[1]
-      .split(",")
-      .map((col) => col.trim().replace(/[`'"]/g, ""));
+    const columns = match[1].split(',').map((col) => col.trim().replace(/[`'"]/g, ''));
 
-    const values = match[2]
-      .split(",")
-      .map((val) => val.trim().replace(/[`'"]/g, ""));
+    const values = match[2].split(',').map((val) => val.trim().replace(/[`'"]/g, ''));
 
     const obj: any = {};
     columns.forEach((col, index) => {
@@ -96,48 +87,44 @@ export function SqlConverter() {
   };
 
   const convertSqlData = (type: string, input: string) => {
-    if (!input.trim()) return "No SQL data provided.";
+    if (!input.trim()) return 'No SQL data provided.';
 
     const parsed = parseInsertSQL(input);
-    if (!parsed) return "Only simple INSERT INTO statements are supported.";
+    if (!parsed) return 'Only simple INSERT INTO statements are supported.';
 
     switch (type) {
-      case "sql-to-json":
+      case 'sql-to-json':
         return JSON.stringify(parsed, null, 2);
 
-      case "sql-to-csv":
-        return (
-          Object.keys(parsed).join(",") +
-          "\n" +
-          Object.values(parsed).join(",")
-        );
+      case 'sql-to-csv':
+        return Object.keys(parsed).join(',') + '\n' + Object.values(parsed).join(',');
 
-      case "sql-to-xml":
+      case 'sql-to-xml':
         return `<root>\n${Object.entries(parsed)
           .map(([key, val]) => `  <${key}>${val}</${key}>`)
-          .join("\n")}\n</root>`;
+          .join('\n')}\n</root>`;
 
-      case "sql-to-yaml":
+      case 'sql-to-yaml':
         return Object.entries(parsed)
           .map(([key, val]) => `${key}: ${val}`)
-          .join("\n");
+          .join('\n');
 
-      case "sql-to-html":
+      case 'sql-to-html':
         return `<table border="1">
 <tr>
 ${Object.keys(parsed)
-            .map((key) => `<th>${key}</th>`)
-            .join("")}
+  .map((key) => `<th>${key}</th>`)
+  .join('')}
 </tr>
 <tr>
 ${Object.values(parsed)
-            .map((val) => `<td>${val}</td>`)
-            .join("")}
+  .map((val) => `<td>${val}</td>`)
+  .join('')}
 </tr>
 </table>`;
 
       default:
-        return "Unsupported converter.";
+        return 'Unsupported converter.';
     }
   };
 
@@ -148,18 +135,18 @@ ${Object.values(parsed)
   };
 
   const handleClear = () => {
-    setInputValue("");
-    setOutput("");
+    setInputValue('');
+    setOutput('');
   };
 
   const handleDownload = () => {
     if (!output) return;
 
-    const blob = new Blob([output], { type: "text/plain" });
+    const blob = new Blob([output], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "converted-output.txt";
+    a.download = 'converted-output.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -175,15 +162,11 @@ ${Object.values(parsed)
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto">
-          
           <PageTitle selectedData={selectedData} />
-
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium block">
-                Input SQL Data
-              </label>
+              <label className="text-sm font-medium block">Input SQL Data</label>
               <textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -193,15 +176,11 @@ ${Object.values(parsed)
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium block">
-                Output
-              </label>
+              <label className="text-sm font-medium block">Output</label>
 
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 min-h-[150px] overflow-auto text-sm">
                 {output ? (
-                  <pre className="whitespace-pre-wrap break-all">
-                    {output}
-                  </pre>
+                  <pre className="whitespace-pre-wrap break-all">{output}</pre>
                 ) : (
                   <div className="text-gray-400 flex flex-col items-center justify-center h-full">
                     <Download className="h-8 w-8 mb-2" />
@@ -213,26 +192,15 @@ ${Object.values(parsed)
           </div>
 
           <div className="mt-6 flex gap-3">
-            <Button
-              onClick={handleConvert}
-              disabled={!selectedConverter || !inputValue.trim()}
-            >
+            <Button onClick={handleConvert} disabled={!selectedConverter || !inputValue.trim()}>
               Convert
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={handleClear}
-              disabled={!inputValue && !output}
-            >
+            <Button variant="outline" onClick={handleClear} disabled={!inputValue && !output}>
               Clear
             </Button>
 
-            <Button
-              variant="secondary"
-              onClick={handleDownload}
-              disabled={!output}
-            >
+            <Button variant="secondary" onClick={handleDownload} disabled={!output}>
               <Download className="mr-2 h-4 w-4" />
               Download
             </Button>

@@ -1,5 +1,8 @@
 "use client"
-import React, { useState } from "react";
+import { getNavbar } from "@/actions/dbAction";
+import { dataType } from "@/utils/types/uiTypes";
+import React, { useEffect, useState } from "react";
+import  Meta  from "./meta";
 
 function JsonFormatterTool() {
   const [inputJson, setInputJson] = useState("");
@@ -10,6 +13,21 @@ function JsonFormatterTool() {
   const [showConvertDropdown, setShowConvertDropdown] = useState(false);
   const [showFixModal, setShowFixModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [list , setList] = useState<dataType[]>([])
+
+ const fetchData = async () => {
+  try {
+    const response = await getNavbar('json');
+    setList(response);
+    console.log("Navbar data:", response); // yaha log karo
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
 
   // Clear output when input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -496,6 +514,9 @@ function JsonFormatterTool() {
           </button>
         </div>
       </main>
+      <div className="mt-8 text-center text-gray-600 text-sm">
+        <Meta selectedData={list} />
+      </div>
     </div>
   );
 }

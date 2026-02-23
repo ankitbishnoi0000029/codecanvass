@@ -9,8 +9,23 @@ export async function getTableData(table) {
   return rows;
 }
 
+export async function getNavbar(route) {
+  
+  try {
+    const [rows] = await ddb.query(
+      `SELECT des,keyword FROM navbar WHERE url_id = ? LIMIT 1`,
+      [route]
+    );
+    return rows[0] || null;
+  } catch (error) {
+    console.error("Navbar Fetch Error:", error);
+    return null;
+  }
+}
+
 export async function getMeta(table, route) {
   const [rows] = await ddb.query(`SELECT metadata FROM ?? WHERE route = ? LIMIT 1`, [table, route]);
+  console.log("table:", table, "route:", route, "metadata:", rows[0]?.metadata);
   return rows[0]?.metadata || null;
 }
 export async function addNewRecord(data) {
@@ -23,7 +38,7 @@ export async function addNewRecord(data) {
       (url_id, urlName, route, des, keyword, metadata)
       VALUES (?, ?, ?, ?, ?, ?)
       `,
-      [category, url_id, urlName, route, des, keyword, JSON.stringify(metaData ?? {})]
+      [category, url_id, urlName, route, des, keyword,metaData]
     );
 
     // ✅ SUCCESS RESPONSE
@@ -41,7 +56,6 @@ export async function addNewRecord(data) {
     };
   }
 }
-
 
 export async function deleteRecord(url_id, table) {
   try {
@@ -84,14 +98,13 @@ export async function deleteRecord(url_id, table) {
 export async function updateRecord(tool_id, data) {
   try {
     const { category, url_id, urlName, route, des, keyword, metaData } = data;
-
     const [result] = await ddb.query(
       `
       UPDATE ??
       SET url_id=?, urlName=?, route=?, des=?, keyword=?, metadata=?
       WHERE url_id=?
       `,
-      [category, url_id, urlName, route, des, keyword, JSON.stringify(metaData || {}), tool_id]
+      [category, url_id, urlName, route, des, keyword,metaData, tool_id]
     );
 
     if (!result || result.affectedRows === 0) {

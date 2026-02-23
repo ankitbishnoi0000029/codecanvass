@@ -42,7 +42,6 @@ export function HtmlConverters() {
   const [input, setInput] = useState<string>("");
   const [output, setOutput] = useState<string>("");
   const [list, setList] = useState<dataType[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
 
   // ==============================
   // LOAD DATA
@@ -58,8 +57,6 @@ export function HtmlConverters() {
       } catch (error) {
         console.error("Failed to load converters:", error);
         setList([]);
-      } finally {
-        if (mounted) setLoading(false);
       }
     };
 
@@ -73,7 +70,7 @@ export function HtmlConverters() {
   // SYNC URL
   // ==============================
   useEffect(() => {
-    if (loading || list.length === 0) return;
+    if (list.length === 0) return;
 
     const slug = pathname.split("/").pop();
 
@@ -91,7 +88,7 @@ export function HtmlConverters() {
       const basePath = pathname.split("/").slice(0, -1).join("/");
       router.replace(`${basePath}/${fallbackRoute}`);
     }
-  }, [pathname, list, loading, router]);
+  }, [pathname, list, router]);
 
   // ==============================
   // CREATE SIDEBAR OPTIONS (UI MODEL)
@@ -137,7 +134,7 @@ export function HtmlConverters() {
       setOutput("");
 
       const basePath = pathname.split("/").slice(0, -1).join("/");
-      router.push(`${basePath}/${id}`);
+      // router.replace(`${basePath}/${id}`);
     },
     [pathname, router, selectedConverter]
   );
@@ -195,10 +192,6 @@ export function HtmlConverters() {
     link.download = `converted.${extension}`;
     link.click();
   };
-
-  if (loading) {
-    return <div className="p-6">Loading converters...</div>;
-  }
 
   return (
     <ReusableSidebar

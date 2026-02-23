@@ -1,26 +1,16 @@
 import { BackgroundRemoverClient } from "./background-remover-client";
-import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Background Remover | CodeBeauty",
-  description: "Remove backgrounds from images automatically with our powerful AI-powered background removal tool.",
-  keywords: "background remover, remove background, image editor, photo editor",
-  openGraph: {
-    title: "Background Remover | CodeBeauty",
-    description: "Remove backgrounds from images automatically with our powerful AI-powered background removal tool.",
-    url: "https://codebeauty.com/backgroundremover",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Background Remover | CodeBeauty",
-    description: "Remove backgrounds from images automatically with our powerful AI-powered background removal tool.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/backgroundremover",
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    table: "navbar",
+    urlId: 'backgroundremover',
+    route: `backgroundremover`,
+    fallbackTitle:       "Background Remover Online",
+    fallbackDescription: "Free online background remover to remove backgrounds from images instantly.",
+    fallbackKeywords:    "background remover, background removal, online background remover, image editor",
+  });
+}
 
 export default function Page() {
   return <BackgroundRemoverClient />;

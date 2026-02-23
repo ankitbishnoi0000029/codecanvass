@@ -1,27 +1,17 @@
+
 import { XmlFormatterPage } from "@/components/sections/xmlFormatter";
-import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "XML Formatter | CodeBeauty",
-  description: "Format and beautify your XML code with our powerful XML formatter. Make your XML readable and properly indented.",
-  keywords: "xml formatter, xml beautifier, xml validator, xml tools",
-  openGraph: {
-    title: "XML Formatter | CodeBeauty",
-    description: "Format and beautify your XML code with our powerful XML formatter. Make your XML readable and properly indented.",
-    url: "https://codebeauty.com/xml-formatter",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "XML Formatter | CodeBeauty",
-    description: "Format and beautify your XML code with our powerful XML formatter. Make your XML readable and properly indented.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/xml-formatter",
-  },
-};
-
+export async function generateMetadata() {
+  return buildMetadata({
+    table: "navbar",
+    urlId: 'xml-formatter',
+    route: `xml-formatter`,
+    fallbackTitle:       "xml Formatter Online",
+    fallbackDescription: "Free online xml formatter to process and format xml data instantly.",
+    fallbackKeywords:    "xml formatter, xml tools, xml editor, online xml tools",
+  });
+}
 export default function XmlFormatter() {
   return (
     <XmlFormatterPage />

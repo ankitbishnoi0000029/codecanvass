@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect, type ChangeEvent } from "react";
 import { Loader2, Download, RefreshCcw, Palette, Sparkles, Zap, Shield, Upload } from "lucide-react";
+import { dataType } from "@/utils/types/uiTypes";
+import { getNavbar } from "@/actions/dbAction";
+import Meta from "./meta";
 
 export function BackgroundRemover() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -15,7 +18,21 @@ export function BackgroundRemover() {
   const [isLibraryReady, setIsLibraryReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+const [list , setList] = useState<dataType[]>([])
 
+ const fetchData = async () => {
+  try {
+    const response = await getNavbar('bg');
+    setList(response);
+    console.log("Navbar data:", response); // yaha log karo
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
   const presetColors = [
     { name: "Transparent", value: "transparent", gradient: "repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)" },
     { name: "White", value: "#ffffff" },
@@ -540,6 +557,7 @@ export function BackgroundRemover() {
           <span>Unlimited Usage</span>
         </p>
       </div>
+      <Meta selectedData={list} />
     </div>
   );
 }

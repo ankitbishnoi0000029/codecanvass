@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Download,
   Search,
@@ -15,6 +15,9 @@ import {
   Clock,
   Film,
 } from "lucide-react";
+import { dataType } from "@/utils/types/uiTypes";
+import { getNavbar } from "@/actions/dbAction";
+import Meta from "./meta";
 
 export  function VideoDownloder() {
   const [url, setUrl] = useState("");
@@ -24,7 +27,21 @@ export  function VideoDownloder() {
   const [activeTab, setActiveTab] = useState("home");
   const [error, setError] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+const [list , setList] = useState<dataType[]>([])
 
+ const fetchData = async () => {
+  try {
+    const response = await getNavbar('vd');
+    setList(response);
+    console.log("Navbar data:", response); // yaha log karo
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
+useEffect(() => {
+  fetchData();
+}, []);
   const extractVideoId = (videoUrl: string) => {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
@@ -553,6 +570,7 @@ export  function VideoDownloder() {
 
         </div>
       </div>
+      <Meta selectedData={list} />
     </div>
   );
 }

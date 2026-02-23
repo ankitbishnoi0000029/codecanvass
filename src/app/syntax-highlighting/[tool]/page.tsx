@@ -1,65 +1,29 @@
+import { SyntaxHighlighting } from "@/components/sections/syntax-highlighting";
 import type { Metadata } from "next";
-import { MetaData } from "@/utils/types/uiTypes";
-import { getMeta } from "@/actions/dbAction";
 
-interface PageProps {
-  params: Promise<{ tool: string }>;
-}
+export const metadata: Metadata = {
+  title: "Syntax Highlighting | CodeBeauty",
+  description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
+  keywords: "syntax highlighting, code highlighting, syntax highlighter, code formatter",
+  openGraph: {
+    title: "Syntax Highlighting | CodeBeauty",
+    description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
+    url: "https://codebeauty.com/syntax-highlighting",
+    type: "website",
+    siteName: "CodeBeauty",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Syntax Highlighting | CodeBeauty",
+    description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
+  },
+  alternates: {
+    canonical: "https://codebeauty.com/syntax-highlighting",
+  },
+};
 
-export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const { params } = await props;
-  const { tool } = await params;
-  const data = await getMeta("syntax_highlighting", tool);
-
-  if (!data) {
-    return {
-      title: "Syntax Highlighting Tool Not Found | CodeBeauty",
-      description: "The requested syntax highlighting tool does not exist.",
-    };
-  }
-
-  let meta: MetaData = {};
-  if (typeof data === "string") {
-    try {
-      meta = JSON.parse(data || "{}");
-    } catch (e) {
-      // If parsing fails, meta remains empty
-    }
-  } else if (typeof data === "object" && data !== null) {
-    meta = { ...data } as MetaData;
-  }
-  const title = meta.title || "Syntax Highlighting Tool";
-  const description = meta.description || "Highlight syntax in your code with our powerful syntax highlighting tools.";
-  const keywords = meta.keywords || "syntax highlighting, code highlighting, syntax highlighter";
-
-  return {
-    title: `${title} | CodeBeauty`,
-    description,
-    keywords,
-    openGraph: {
-      title: `${title} | CodeBeauty`,
-      description,
-      url: `https://codebeauty.com/syntax-highlighting/${tool}`,
-      type: "website",
-      siteName: "CodeBeauty",
-      ...(meta.ogImage && { images: [{ url: meta.ogImage }] }),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} | CodeBeauty`,
-      description,
-    },
-    alternates: {
-      canonical: `https://codebeauty.com/syntax-highlighting/${tool}`,
-    },
-  };
-}
-
-export default function ToolPage() {
+export default function syntaxhighlightingPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Dynamic Tool Page</h1>
-      <p>This is a dynamic tool page for syntax-highlighting.</p>
-    </div>
+    <SyntaxHighlighting />
   );
 }

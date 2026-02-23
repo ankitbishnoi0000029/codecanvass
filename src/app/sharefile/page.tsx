@@ -1,26 +1,17 @@
 import RandomToolsPage from "@/components/sections/sharefile";
-import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Share File | CodeBeauty",
-  description: "Share files easily and securely with our file sharing tool.",
-  keywords: "file sharing, share files, file upload, file transfer",
-  openGraph: {
-    title: "Share File | CodeBeauty",
-    description: "Share files easily and securely with our file sharing tool.",
-    url: "https://codebeauty.com/sharefile",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Share File | CodeBeauty",
-    description: "Share files easily and securely with our file sharing tool.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/sharefile",
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    table: "navbar",
+    urlId: 'sharefile',
+    route: `/sharefile`,
+    fallbackTitle:       "Background Remover Online",
+    fallbackDescription: "Free online background remover to remove backgrounds from images instantly.",
+    fallbackKeywords:    "background remover, background removal, online background remover, image editor",
+  });
+}
+
 
 export default function Page() {
   return (

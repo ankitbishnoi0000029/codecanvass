@@ -527,6 +527,7 @@ export const category = [
 ];
 export const categories = [
   { id: 'popular', name: 'Popular Tools', icon: "TrendingUp" },
+  { id: 'navbar', name: 'Navbar', icon: "SiNaver" },
   { id: 'trendingtools', name: 'Trending Tools', icon: "Sparkles" },
   { id: 'encode_decode', name: 'Encode / Decode', icon: "Shield" },
   { id: 'base64_tools', name: 'Base64 Tools', icon: "Layers" },

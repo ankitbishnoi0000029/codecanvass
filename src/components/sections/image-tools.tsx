@@ -7,6 +7,7 @@ import { Upload, Download, Settings, Palette } from "lucide-react"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 import { PageTitle } from "./title"
+import { usePathname, useRouter } from "next/navigation"
 
 // Helper function to convert image formats
 const convertImageFormat = async (file: File, targetFormat: string): Promise<string> => {
@@ -27,7 +28,6 @@ const convertImageFormat = async (file: File, targetFormat: string): Promise<str
 
         ctx.drawImage(img, 0, 0);
 
-        // Convert to target format
         let mimeType = 'image/png';
         switch (targetFormat) {
           case 'jpg':
@@ -47,7 +47,6 @@ const convertImageFormat = async (file: File, targetFormat: string): Promise<str
             mimeType = 'image/png';
         }
 
-        // For JPEG, we need to handle quality
         if (mimeType === 'image/jpeg') {
           resolve(canvas.toDataURL(mimeType, 0.92));
         } else {
@@ -64,13 +63,9 @@ const convertImageFormat = async (file: File, targetFormat: string): Promise<str
 
 // GIF Splitter functionality
 const splitGIF = async (file: File): Promise<string[]> => {
-  // This is a simplified version - for full GIF splitting,
-  // you'd need a library like gifuct-js or gif.js
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      // In a real implementation, you'd parse the GIF frames here
-      // For now, we'll just return the original GIF as a single frame
       resolve([e.target?.result as string]);
     };
     reader.onerror = () => reject(new Error('Failed to read GIF file'));
@@ -86,19 +81,43 @@ export function ImageTools() {
   const [list, setList] = useState<dataType[]>([])
   const [previewUrl, setPreviewUrl] = useState<string>("")
 
-  // Fetch SQL Tools
+  const router = useRouter();
+  const pathname = usePathname()
+
+  // ✅ FIXED: Single effect — fetch data first, then sync selected tool from URL
   useEffect(() => {
     const fetchData = async () => {
       const categoriesData = await getTableData("image_tools") as dataType[]
       setList(categoriesData)
 
-      // Set first tool as selected by default
-      if (categoriesData.length > 0) {
-        setSelectedTool(categoriesData[0].route || categoriesData[0].id.toString())
+      // Read current slug from URL
+      const slug = pathname.split('/').pop() ?? '';
+
+      if (slug) {
+        // ✅ Try to match the URL slug to a route in the fetched list
+        const matchedItem = categoriesData.find(
+          (item) => item.route === slug || item.id.toString() === slug
+        );
+
+        if (matchedItem) {
+          // ✅ URL matches a valid tool — select it
+          setSelectedTool(matchedItem.route ?? matchedItem.id.toString());
+        } else if (categoriesData.length > 0) {
+          // ✅ No match — fall back to first item and redirect
+          const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString();
+          setSelectedTool(firstRoute);
+          router.replace(firstRoute);
+        }
+      } else if (categoriesData.length > 0) {
+        // ✅ No slug in URL — default to first item
+        const firstRoute = categoriesData[0].route ?? categoriesData[0].id.toString();
+        setSelectedTool(firstRoute);
+        router.replace(firstRoute);
       }
     }
+
     fetchData()
-  }, [])
+  }, [pathname]) // ✅ Re-run when pathname changes so browser back/forward works
 
   const converterOptions: SidebarOption[] =
     list?.map((item) => ({
@@ -119,10 +138,12 @@ export function ImageTools() {
   ]
 
   const handleToolChange = (optionId: string | number) => {
-    setSelectedTool(optionId.toString())
+    const id = optionId.toString()
+    setSelectedTool(id)
     setInputFile(null)
     setOutputUrl("")
     setPreviewUrl("")
+    router.push(`${id}`)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +151,6 @@ export function ImageTools() {
     setInputFile(file)
     setOutputUrl("")
 
-    // Create preview URL
     if (file) {
       const url = URL.createObjectURL(file)
       setPreviewUrl(url)
@@ -153,27 +173,20 @@ export function ImageTools() {
       if (toolName.includes("jpg to png")) {
         const result = await convertImageFormat(inputFile, 'png')
         setOutputUrl(result)
-      }
-      else if (toolName.includes("png to jpg") || toolName.includes("png to jpeg")) {
+      } else if (toolName.includes("png to jpg") || toolName.includes("png to jpeg")) {
         const result = await convertImageFormat(inputFile, 'jpg')
         setOutputUrl(result)
-      }
-      else if (toolName.includes("bmp to png")) {
+      } else if (toolName.includes("bmp to png")) {
         const result = await convertImageFormat(inputFile, 'png')
         setOutputUrl(result)
-      }
-      else if (toolName.includes("gif splitter")) {
+      } else if (toolName.includes("gif splitter")) {
         const frames = await splitGIF(inputFile)
         setOutputUrl(frames)
-      }
-      else if (toolName.includes("gif viewer")) {
-        // Just show the GIF
+      } else if (toolName.includes("gif viewer")) {
         const reader = new FileReader()
         reader.onload = (e) => setOutputUrl(e.target?.result as string)
         reader.readAsDataURL(inputFile)
-      }
-      else {
-        // Default conversion
+      } else {
         const result = await convertImageFormat(inputFile, 'png')
         setOutputUrl(result)
       }
@@ -188,7 +201,6 @@ export function ImageTools() {
     if (!outputUrl) return
 
     if (Array.isArray(outputUrl)) {
-      // Download multiple files (for GIF splitter)
       outputUrl.forEach((url, index) => {
         const link = document.createElement("a")
         link.href = url
@@ -196,11 +208,9 @@ export function ImageTools() {
         link.click()
       })
     } else {
-      // Download single file
       const link = document.createElement("a")
       link.href = outputUrl
 
-      // Determine file extension based on tool
       let ext = 'png'
       const toolName = selectedOption?.urlName?.toLowerCase() || ""
       if (toolName.includes("jpg") || toolName.includes("jpeg")) ext = 'jpg'
@@ -313,14 +323,13 @@ export function ImageTools() {
 
             <div>
               <strong className="block mb-2">Keywords:</strong>
-
               <div className="flex flex-wrap gap-2">
                 {selectedOption.keyword
                   ?.split(",")
                   .map((kw, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition ">
+                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition">
                       {kw.trim()}
                     </span>
                   ))}
