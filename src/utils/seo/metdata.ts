@@ -39,7 +39,13 @@ export const buildMetadata = async ({
   fallbackKeywords    = "online tools, utilities, converter",
 }: GenerateMetaOptions): Promise<Metadata> => {
 
-  const raw  = await getMeta(table, urlId);
+  let raw;
+  try {
+    raw = await getMeta(table, urlId);
+  } catch (error) {
+    console.warn(`Failed to fetch metadata for ${table}/${urlId}:`, error);
+    raw = null;
+  }
   const meta = parseMeta(raw);
   /* ── core values with defaults ── */
   const title       = get(meta, "title")       ?? fallbackTitle;

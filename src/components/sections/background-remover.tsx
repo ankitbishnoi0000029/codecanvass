@@ -80,7 +80,7 @@ useEffect(() => {
 
         // Preload the configuration
         await bgRemoval.preload({
-          model: "isnet_fp16",
+          model: "isnet",
         });
 
         if (mounted) {
@@ -142,7 +142,7 @@ useEffect(() => {
       const { removeBackground } = await import("@imgly/background-removal");
 
       const blob = await removeBackground(file, {
-        model: "isnet_fp16",
+        model: "isnet",
         output: {
           format: "image/png",
           quality: 1,
