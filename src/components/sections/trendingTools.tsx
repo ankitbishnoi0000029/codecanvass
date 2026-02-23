@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Heading } from "../ui/heading";
 import { getTableData } from "@/actions/dbAction";
 import { TrendingUp } from "lucide-react";
@@ -10,7 +9,6 @@ import Link from "next/link";
 
 export function TrendingTools() {
   const [data, setData] = useState<dataType[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -20,9 +18,9 @@ export function TrendingTools() {
   }, []);
 
   return (
-    <section className="relative py-16 px-6 my-6">
+    <section className="relative py-16 px-6 my-6 ">
       {/* Minimal modern background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-white to-slate-100" />
+      <div className="absolute inset-0 -z-10 rounded-4xl bg-gradient-to-br from-pink-200 via-white to-pink-300" />
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
