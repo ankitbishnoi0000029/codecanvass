@@ -538,4 +538,134 @@ export const categories = [
   { id: 'sql_converters', name: 'SQL Converters', icon: "Database" },
   { id: 'image_tools', name: 'Image Tools', icon: "Image" },
   { id: 'nf', name: 'New Features', icon: "Sparkles" },
+  { id: 'pdf', name: 'PDF Tools', icon: "PDF" },
 ];
+export const GUIDES = {
+  'web-to-pdf-guide': {
+    title: 'How to Save a Web Page as PDF',
+    steps: [
+      {
+        t: 'Chrome / Edge / Firefox',
+        d: 'Press Ctrl+P (Cmd+P on Mac) → Set Destination to "Save as PDF" → Click Save.',
+      },
+      { t: 'Safari on Mac', d: 'File menu → Export as PDF → Choose location and save.' },
+      { t: 'iPhone / iPad', d: 'Share button → Options → PDF → Save to Files.' },
+      { t: 'Android Chrome', d: 'Three-dot menu → Share → Print → Save as PDF.' },
+      {
+        t: 'Using HTML to PDF tool above',
+        d: 'Save the webpage as HTML file (Ctrl+S), then upload the HTML file here.',
+      },
+    ],
+  },
+  'sign-guide': {
+    title: 'How to Electronically Sign a PDF',
+    steps: [
+      {
+        t: 'Use our Sign PDF tool',
+        d: 'Upload PDF → Draw your signature in the canvas → Click Apply → Download signed PDF.',
+      },
+      {
+        t: 'Adobe Acrobat Reader (Free)',
+        d: 'Open PDF → Fill & Sign → Draw or type signature → Position it → Save.',
+      },
+      {
+        t: 'Preview on Mac',
+        d: 'Open in Preview → Markup toolbar → Signature → Create → Drag onto document.',
+      },
+      { t: 'Microsoft Edge', d: 'Open PDF in Edge → Draw tool → Sign → Save a copy.' },
+      {
+        t: 'Online: DocuSign / HelloSign',
+        d: 'These services provide legally binding electronic signatures.',
+      },
+    ],
+  },
+  'split-guide': {
+    title: 'How to Split PDF Pages',
+    steps: [
+      {
+        t: 'Use our Split PDF tool',
+        d: 'Upload PDF → Enter ranges like "1-3, 4-6" → Each range downloads as a PDF.',
+      },
+      { t: 'Extract a single page', d: 'Enter just "3" to extract only page 3 as its own PDF.' },
+      { t: 'Split every page', d: 'Leave range blank — splits every page into individual PDFs.' },
+      { t: 'Adobe Acrobat (paid)', d: 'Tools → Organize Pages → Split → set pages per file.' },
+    ],
+  },
+  'fill-guide': {
+    title: 'How to Fill Out a PDF Form',
+    steps: [
+      {
+        t: 'Use our Fill PDF Form tool',
+        d: 'Upload PDF → Click "Load Form Fields" → Fill in values → Download.',
+      },
+      {
+        t: 'Adobe Acrobat Reader (Free)',
+        d: 'Open PDF → form fields are clickable — type, check boxes, sign. Save.',
+      },
+      { t: 'Chrome Browser', d: 'Open PDF in Chrome → click on form fields and type directly.' },
+      {
+        t: 'Preview on Mac',
+        d: 'Open PDF → form fields auto-detected → click and fill → Export as PDF.',
+      },
+      {
+        t: 'Non-fillable PDF?',
+        d: 'Use our Edit PDF tool to add text boxes over the field areas manually.',
+      },
+    ],
+  },
+  'excel-tips': {
+    title: 'Excel Tips & Tricks',
+    steps: [
+      {
+        t: 'Add a tick/checkmark (✓)',
+        d: 'Method 1: In a cell type =CHAR(252) and set font to Wingdings. Method 2: Insert → Symbol → Wingdings font → select ✓.',
+      },
+      {
+        t: 'Number pages in Excel',
+        d: 'Insert → Header & Footer → click footer section → Insert Page Number. Format: &[Page] of &[Pages].',
+      },
+      {
+        t: 'Un-concatenate / split text',
+        d: 'Use Data → Text to Columns. Or formulas: =LEFT(A1,3), =RIGHT(A1,3), =MID(A1,2,4).',
+      },
+      {
+        t: 'Check duplicates in Excel',
+        d: 'Home → Conditional Formatting → Highlight Cell Rules → Duplicate Values. Or use our Duplicate Checker tool.',
+      },
+      {
+        t: 'Remove blank lines',
+        d: 'Ctrl+G → Special → Blanks → Right-click → Delete Entire Row. Or use our Remove Blank Rows tool.',
+      },
+      {
+        t: 'How to accept edits in Word',
+        d: 'Review tab → Accept → Accept All Changes. Or right-click a tracked change → Accept.',
+      },
+      {
+        t: 'Remove page corners/borders in Word',
+        d: 'Design tab → Page Borders → None → OK. For text box borders: right-click → Format Shape → No line.',
+      },
+    ],
+  },
+  'pdf-to-ppt': {
+    title: 'PDF to PowerPoint',
+    steps: [
+      {
+        t: 'Step 1: Convert PDF pages to images',
+        d: 'Use our "PDF to JPG" tool to download each page as a JPG image.',
+      },
+      { t: 'Step 2: Create new PowerPoint', d: 'Open PowerPoint → New blank presentation.' },
+      {
+        t: 'Step 3: Insert images as slides',
+        d: 'For each slide: Insert → Pictures → select the page JPG → resize to fill slide.',
+      },
+      {
+        t: 'Online tools',
+        d: 'SmallPDF.com, ILovePDF.com, and Adobe Acrobat (paid) can convert PDF to PPTX directly.',
+      },
+      {
+        t: 'LibreOffice Impress (Free)',
+        d: 'Open LibreOffice Impress → Insert → Image for each PDF page image.',
+      },
+    ],
+  },
+};
