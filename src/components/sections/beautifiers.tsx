@@ -11,9 +11,8 @@ import parserHtml from "prettier/parser-html"
 import parserPostcss from "prettier/parser-postcss"
 import parserMarkdown from "prettier/parser-markdown"
 import parserYaml from "prettier/parser-yaml"
-import parserAngular from "prettier/parser-angular"
 
-import { format as sqlFormat } from "sql-formatter"   // ✅ FIXED SQL IMPORT
+import { format as sqlFormat } from "sql-formatter"   
 
 export function Beautifiers() {
   const [selectedOptionId, setSelectedOptionId] = useState("")

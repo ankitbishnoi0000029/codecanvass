@@ -76,10 +76,10 @@ export function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="text-base lg:text-lg font-bold bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  CodeBeauty
+                  AI ONLINE TOOLS
                 </span>
                 <span className="text-[10px] text-gray-500 -mt-0.5 hidden sm:block">
-                  Learn. Code. Create.
+                  Power Your Code with AI Tools
                 </span>
               </div>
             </a>

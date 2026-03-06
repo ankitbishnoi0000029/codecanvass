@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { getMeta } from "@/actions/dbAction";
 import { console } from "inspector";
 
-const SITE_NAME = "CodeBeauty";
-const SITE_URL  = "https://codebeauty.com";
+const SITE_NAME = "AI Online Tools";
+export const SITE_URL = "https://aionlinetoolss.com/";
 
 interface GenerateMetaOptions {
   table:                string;

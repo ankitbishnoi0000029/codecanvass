@@ -134,7 +134,7 @@ export default function WelcomePage() {
                 <span className="inline-block animate-wave">👋</span> Welcome to
                 <br />
                 <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-                  CodeBeauty
+                  AI ONLINE TOOLS
                 </span>
               </h2>
 
@@ -148,7 +148,7 @@ export default function WelcomePage() {
 
               {/* ⚡ Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-                 <Link href={"/pdf-tool"} className="group px-6 py-3 bg-gradient-to-r from-pink-600 via-gray-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2"> 
+                 <Link href={"/pdf-tool"} className="group px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2"> 
                    <Zap className="w-5 h-5" />
                    PDF Tools
                   <ArrowBigDown className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -158,7 +158,7 @@ export default function WelcomePage() {
                   Try JSON Formatter
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link >
-                <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-900 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
                   <Zap className="w-5 h-5" />
                   Flag Maker
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

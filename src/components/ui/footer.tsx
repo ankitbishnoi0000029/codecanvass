@@ -10,8 +10,8 @@ export function Footer() {
     {
       title: 'Popular Functionality',
       links: [
-        { name: 'JSON Beautifier', href: '/tools/json-beautifier' },
-        { name: 'HTML Viewer', href: '/tools/html-viewer' },
+        { name: 'JSON Beautifier', href: 'json-formatter' },
+        { name: 'HTML Viewer', href: 'html-converters/html-stripper' },
         { name: 'Number to Words', href: '/tools/number-to-words' },
         { name: 'SQL Formatter', href: '/tools/sql-formatter' },
         { name: 'Image to Base64', href: '/tools/image-to-base64' },
@@ -415,9 +415,9 @@ export function Footer() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                    CodeBeauty
+                    AI ONLINE TOOLS
                   </span>
-                  <span className="text-xs text-gray-500 -mt-1">Learn. Code. Create.</span>
+                  <span className="text-xs text-gray-500 -mt-1">Power Your Code with AI</span>
                 </div>
               </Link>
 
@@ -514,7 +514,7 @@ export function Footer() {
         <div className="py-6 border-t border-purple-100/50">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>© 2024 CodeBeauty. All rights reserved.</span>
+              <span>© 2024 AI Online Tools. All rights reserved.</span>
               <span className="hidden md:block">•</span>
               <button className="flex items-center space-x-1 hover:text-purple-600 transition-colors duration-300 group">
                 <Star className="w-4 h-4 group-hover:fill-purple-600 transition-all duration-300" />

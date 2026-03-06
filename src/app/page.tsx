@@ -1,7 +1,5 @@
-import { getTableData } from "@/actions/dbAction";
+
 import { SubNavbar } from "@/components/navbar/sub-navbar";
-import { DevelTool } from "@/components/sections/develtool";
-import { NewFun } from "@/components/sections/newfun";
 import { Popular } from "@/components/sections/popular";
 import { TrendingTools } from "@/components/sections/trendingTools";
 import WelcomePage from "@/components/ui/welcome-Page";
@@ -34,6 +32,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CodeBeauty - Free Online Developer Tools & Utilities",
     description: "CodeBeauty offers a comprehensive collection of free online developer tools, converters, formatters, and utilities to help you code faster and better.",
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
   alternates: {
     canonical: "https://codebeauty.com",
