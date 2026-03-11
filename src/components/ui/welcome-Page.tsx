@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Code, Rocket, Zap, ArrowRight, ArrowBigDown } from "lucide-react";
+import { Sparkles, Code, Rocket, Zap, ArrowRight, ArrowBigDown, LucideCode } from "lucide-react";
 import Link from "next/link";
 
 export default function WelcomePage() {
@@ -157,6 +157,11 @@ export default function WelcomePage() {
                   <Zap className="w-5 h-5" />
                   Try JSON Formatter
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link >
+                   <Link href={"/codegenerator"} className="group px-6 py-3 bg-black text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                AI Code Generator
+                  <LucideCode className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link >
                 <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-900 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
                   <Zap className="w-5 h-5" />
