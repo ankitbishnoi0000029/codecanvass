@@ -55,145 +55,92 @@ export default function WelcomePage() {
 
   return (
     <div className="w-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-x-hidden">
-      <main className="relative z-10 w-full">
-        <div className="w-full">
-          <div
-            ref={heroRef}
-            className="text-center min-h-[calc(100vh-120px)] flex flex-col justify-center relative overflow-hidden w-full py-8 sm:py-12 md:py-16"
-          >
-            {/* 🖱️ Mouse Tracker Circle */}
-            {isMouseVisible && windowSize.width > 768 && (
-              <>
-                <div
-                  className="fixed pointer-events-none z-50"
-                  style={{
-                    left: `${mousePosition.x}px`,
-                    top: `${mousePosition.y}px`,
-                    transform: "translate(-50%, -50%)",
-                    width: "300px",
-                    height: "300px",
-                    background:
-                      "radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 70%)",
-                    borderRadius: "50%",
-                    transition: "all 0.3s ease-out",
-                  }}
+      <main className="relative z-10 w-full pt-6 sm:pt-12 md:pt-16">
+        <div className="max-w-7xl mx-auto pb-12 sm:pb-16 md:pb-20">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6">Welcome to AI ONLINE TOOLS</h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
+              Empower your creativity — build, learn, and explore powerful developer tools with clean design and seamless experience.
+            </p>
+          </div>
+
+          {/* 🚀 Floating Icons */}
+          <div className="flex items-center justify-center gap-6 flex-wrap mb-10">
+            {[Code, Rocket, Sparkles].map((Icon, idx) => (
+              <div
+                key={idx}
+                className="w-14 h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+              >
+                <Icon
+                  className={`w-7 h-7 ${
+                    idx === 0
+                      ? "text-purple-600"
+                      : idx === 1
+                      ? "text-pink-600"
+                      : "text-blue-600"
+                  }`}
                 />
-                <div
-                  className="fixed pointer-events-none z-50"
-                  style={{
-                    left: `${mousePosition.x}px`,
-                    top: `${mousePosition.y}px`,
-                    transform: "translate(-50%, -50%)",
-                    width: "20px",
-                    height: "20px",
-                    border: "2px solid rgba(168, 85, 247, 0.5)",
-                    borderRadius: "50%",
-                    transition: "all 0.1s ease-out",
-                  }}
-                />
-              </>
-            )}
-
-            {/* 🌈 Floating Orbs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div
-                className="absolute w-80 h-80 bg-purple-400/30 rounded-full blur-3xl"
-                style={{
-                  top: "10%",
-                  left: "5%",
-                  animation: "float 15s ease-in-out infinite",
-                }}
-              />
-              <div
-                className="absolute w-96 h-96 bg-pink-400/30 rounded-full blur-3xl"
-                style={{
-                  bottom: "5%",
-                  right: "5%",
-                  animation: "float 20s ease-in-out infinite reverse",
-                }}
-              />
-              <div
-                className="absolute w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
-                style={{
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-            </div>
-
-            {/* ✨ Hero Section */}
-            <div className="relative z-10 px-4 sm:px-6 w-full max-w-7xl mx-auto">
-              <div className="inline-block mb-3 sm:mb-4">
-                <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-100 text-purple-700 rounded-full text-xs sm:text-sm font-semibold">
-                  ✨ Built for Developers
-                </span>
               </div>
+            ))}
+          </div>
 
-              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight text-gray-800">
-                <span className="inline-block animate-wave">👋</span> Welcome to
-                <br />
-                <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-                  AI ONLINE TOOLS
-                </span>
-              </h2>
+          {/* 🌈 Floating Orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute w-80 h-80 bg-purple-400/30 rounded-full blur-3xl"
+              style={{
+                top: "10%",
+                left: "5%",
+                animation: "float 15s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute w-96 h-96 bg-pink-400/30 rounded-full blur-3xl"
+              style={{
+                bottom: "5%",
+                right: "5%",
+                animation: "float 20s ease-in-out infinite reverse",
+              }}
+            />
+            <div
+              className="absolute w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
+              style={{
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+          </div>
 
-              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
-                Empower your creativity — build, learn, and explore{" "}
-                <span className="font-semibold text-purple-600">
-                  powerful developer tools
-                </span>{" "}
-                with clean design and seamless experience.
-              </p>
+          {/* ⚡ Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+            <Link href={"/pdf-tool"} className="group px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              PDF Tools
+              <ArrowBigDown className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
 
-              {/* ⚡ Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-                 <Link href={"/pdf-tool"} className="group px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2"> 
-                   <Zap className="w-5 h-5" />
-                   PDF Tools
-                  <ArrowBigDown className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link > 
-                <Link href={"/json-formatter"} className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Try JSON Formatter
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link >
-                   <Link href={"/codegenerator"} className="group px-6 py-3 bg-black text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                AI Code Generator
-                  <LucideCode className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link >
-                <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-900 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Flag Maker
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link >
+            <Link href={"/json-formatter"} className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Try JSON Formatter
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
 
-                <Link href={"/base64-tools/image-to-base64"} className="px-6 py-3 bg-white text-purple-700 font-semibold rounded-2xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 shadow-lg transform hover:-translate-y-1 transition-all flex items-center gap-2">
-                  🖼️ Convert Image to Base64
-                </Link >
-              </div>
+            <Link href={"/codegenerator"} className="group px-6 py-3 bg-black text-white font-semibold rounded-2xl shadow-xl hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              AI Code Generator
+              <LucideCode className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
 
-              {/* 🚀 Floating Icons */}
-              <div className="flex items-center justify-center gap-6 flex-wrap">
-                {[Code, Rocket, Sparkles].map((Icon, idx) => (
-                  <div
-                    key={idx}
-                    className="w-14 h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
-                  >
-                    <Icon
-                      className={`w-7 h-7 ${
-                        idx === 0
-                          ? "text-purple-600"
-                          : idx === 1
-                          ? "text-pink-600"
-                          : "text-blue-600"
-                      }`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-900 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Flag Maker
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <Link href={"/base64-tools/image-to-base64"} className="px-6 py-3 bg-white text-purple-700 font-semibold rounded-2xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 shadow-lg transform hover:-translate-y-1 transition-all flex items-center gap-2">
+              🖼️ Convert Image to Base64
+            </Link>
           </div>
         </div>
       </main>
@@ -214,6 +161,24 @@ export default function WelcomePage() {
           animation: wave 2s ease-in-out infinite;
         }
       `}</style>
+
+      {/* 🖱️ Mouse Tracker Circle */}
+      {isMouseVisible && windowSize.width > 768 && (
+        <div
+          className="fixed pointer-events-none z-50"
+          style={{
+            left: `${mousePosition.x}px`,
+            top: `${mousePosition.y}px`,
+            transform: "translate(-50%, -50%)",
+            width: "300px",
+            height: "300px",
+            backgroundColor: "rgba(168, 85, 247, 0.15)",
+            border: "2px solid rgba(168, 85, 247, 0.5)",
+            borderRadius: "50%",
+            transition: "all 0.3s ease-out",
+          }}
+        />
+      )}
     </div>
   );
 }
