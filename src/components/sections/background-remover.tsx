@@ -257,7 +257,7 @@ export function BackgroundRemover() {
       {/* ── Hero ── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
-        <div className="relative max-w-7xl mx-auto px-6 py-16 text-center">
+        <div className="relative max-w-7xl mx-auto px-6 py-4 text-center">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Sparkles size={16} />
             AI-Powered Background Removal

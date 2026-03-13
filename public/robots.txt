@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# Allow all major search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Disallow access to admin and API routes for security
+Disallow: /admin/
+Disallow: /api/
+
+# Disallow access to development files
+Disallow: /_next/
+Disallow: /node_modules/
+
+# Sitemap
+Sitemap: https://www.aionlinetoolss.com/sitemap.xml
