@@ -1,9 +1,6 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  turbopack: {
-    root: process.cwd(),
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  turbopack: {},
 
   webpack: (config, { isServer }) => {
     if (!isServer) {
