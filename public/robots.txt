@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Allow all major search engine bots
+# --- Major Search Engines ---
 User-agent: Googlebot
 Allow: /
 
@@ -20,13 +20,41 @@ Allow: /
 User-agent: YandexBot
 Allow: /
 
-# Disallow access to admin and API routes for security
+# --- AI Crawlers / LLM Training Bots ---
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+# --- Security: block sensitive areas ---
 Disallow: /admin/
 Disallow: /api/
-
-# Disallow access to development files
-Disallow: /_next/
 Disallow: /node_modules/
 
-# Sitemap
+# --- Next.js internal files (optional) ---
+Disallow: /_next/static/
+
+# --- Sitemap ---
 Sitemap: https://www.aionlinetoolss.com/sitemap.xml

@@ -186,3 +186,29 @@ export async function userlogout() {
     }
   }
 }
+export async function subscribe(email) {
+  try {
+    const [rows] = await ddb.query(
+      `
+      INSERT INTO subscribe
+      (email_id)
+      VALUES (?)
+      `,
+      [email]
+    );
+
+    if (!rows || rows.length === 0) {
+      return { success: false, message: "Invalid credentials" }
+    }
+
+    return {
+      success: true,
+      message: "Subscription successful",
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "Subscription failed",
+    }
+  }
+}

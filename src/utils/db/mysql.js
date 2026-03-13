@@ -21,10 +21,6 @@ const createPool = () => {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_SCHEMA,
       port: Number(process.env.DB_PORT) || 3306,
-      // ssl: {
-      //     ca: process.env.AIVEN_SSL_CA,
-      //     rejectUnauthorized: false,
-      // },
       waitForConnections: true,
       connectionLimit: 5,
       queueLimit: 0,
