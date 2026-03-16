@@ -17,9 +17,8 @@ const ipConverters = {
     return parts.map(p => p.toString(16).padStart(2, "0")).join("")
   },
   "binary-to-ip": (input: string) => {
-    const parts = input.split(".").map(b => parseInt(b, 2))
-    if (parts.some(p => isNaN(p) || p < 0 || p > 255)) return "Invalid binary IP"
-    return parts.join(".")
+   const parts = input.match(/.{1,8}/g);
+  return parts?.map(b => parseInt(b, 2)).join(".") || "Invalid binary";
   },
   "ip-to-binary": (input: string) => {
     const parts = input.split(".").map(p => parseInt(p))

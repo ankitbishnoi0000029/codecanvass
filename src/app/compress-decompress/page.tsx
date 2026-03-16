@@ -1,26 +1,21 @@
 import { CompressDecompress } from "@/components/sections/compress-decompress";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Compress/Decompress Tools | CodeBeauty",
-  description: "Compress and decompress files with our powerful compression tools. ZIP, GZIP, and more compression formats.",
-  keywords: "compress, decompress, compression tools, zip tools, file compression",
-  openGraph: {
-    title: "Compress/Decompress Tools | CodeBeauty",
-    description: "Compress and decompress files with our powerful compression tools. ZIP, GZIP, and more compression formats.",
-    url: "https://codebeauty.com/compress-decompress",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Compress/Decompress Tools | CodeBeauty",
-    description: "Compress and decompress files with our powerful compression tools. ZIP, GZIP, and more compression formats.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/compress-decompress",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function compressdecompressPage() {
   return (

@@ -1,27 +1,21 @@
 import { ChartTools } from "@/components/sections/chart-tools";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Chart Tools | CodeBeauty",
-  description: "Create and customize charts with our powerful chart tools. Generate various types of charts and graphs.",
-  keywords: "chart tools, graph tools, data visualization, chart generator",
-  openGraph: {
-    title: "Chart Tools | CodeBeauty",
-    description: "Create and customize charts with our powerful chart tools. Generate various types of charts and graphs.",
-    url: "https://codebeauty.com/chart-tools",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Chart Tools | CodeBeauty",
-    description: "Create and customize charts with our powerful chart tools. Generate various types of charts and graphs.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/chart-tools",
-  },
-};
-
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 export default function charttoolsPage() {
   return (
     <ChartTools />

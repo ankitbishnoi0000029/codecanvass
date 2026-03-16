@@ -1,26 +1,21 @@
 import { ProgrammingEditors } from "@/components/sections/programming-editors";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Programming Editors | CodeBeauty",
-  description: "Edit and work with code using our powerful programming editors. Support for multiple programming languages.",
-  keywords: "programming editor, code editor, text editor, online code editor",
-  openGraph: {
-    title: "Programming Editors | CodeBeauty",
-    description: "Edit and work with code using our powerful programming editors. Support for multiple programming languages.",
-    url: "https://codebeauty.com/programming-editors",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Programming Editors | CodeBeauty",
-    description: "Edit and work with code using our powerful programming editors. Support for multiple programming languages.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/programming-editors",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function programmingeditorsPage() {
   return (

@@ -1,27 +1,21 @@
 import HashTools from "@/components/sections/hash-generator";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Hash Tools | CodeBeauty",
-  description: "Generate and verify hashes using various algorithms including MD5, SHA1, SHA256, and more with our powerful hash tools.",
-  keywords: "hash generator, md5, sha1, sha256, hash tools, password hash",
-  openGraph: {
-    title: "Hash Tools | CodeBeauty",
-    description: "Generate and verify hashes using various algorithms including MD5, SHA1, SHA256, and more with our powerful hash tools.",
-    url: "https://codebeauty.com/HashTools",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Hash Tools | CodeBeauty",
-    description: "Generate and verify hashes using various algorithms including MD5, SHA1, SHA256, and more with our powerful hash tools.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/HashTools",
-  },
-};
-
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 export default function sqlconvertersPage() {
     return (
       <HashTools />

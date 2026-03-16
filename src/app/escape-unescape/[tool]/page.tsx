@@ -1,26 +1,21 @@
 import { EscapeUnescape } from "@/components/sections/escape-unescape";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Escape/Unescape Tools | CodeBeauty",
-  description: "Escape and unescape strings with our powerful escape/unescape tools. HTML escape, URL escape, and more.",
-  keywords: "escape, unescape, string escape, html escape, url escape",
-  openGraph: {
-    title: "Escape/Unescape Tools | CodeBeauty",
-    description: "Escape and unescape strings with our powerful escape/unescape tools. HTML escape, URL escape, and more.",
-    url: "https://codebeauty.com/escape-unescape",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Escape/Unescape Tools | CodeBeauty",
-    description: "Escape and unescape strings with our powerful escape/unescape tools. HTML escape, URL escape, and more.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/escape-unescape",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function escapeunescapePage() {
   return (

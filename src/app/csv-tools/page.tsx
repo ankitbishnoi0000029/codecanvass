@@ -1,26 +1,21 @@
 import { CsvTools } from "@/components/sections/csv-tools";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "CSV Tools | CodeBeauty",
-  description: "Process and convert CSV files with our powerful CSV tools. Convert CSV to JSON, XML, and more formats.",
-  keywords: "csv tools, csv converter, csv processor, csv to json",
-  openGraph: {
-    title: "CSV Tools | CodeBeauty",
-    description: "Process and convert CSV files with our powerful CSV tools. Convert CSV to JSON, XML, and more formats.",
-    url: "https://codebeauty.com/csv-tools",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "CSV Tools | CodeBeauty",
-    description: "Process and convert CSV files with our powerful CSV tools. Convert CSV to JSON, XML, and more formats.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/csv-tools",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function csvtoolsPage() {
   return (

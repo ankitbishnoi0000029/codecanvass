@@ -1,26 +1,21 @@
 import { StringUtilities } from '../../components/sections/string-utilities'
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "String Utilities | CodeBeauty",
-  description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
-  keywords: "string utilities, string tools, text processing, string manipulation",
-  openGraph: {
-    title: "String Utilities | CodeBeauty",
-    description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
-    url: "https://codebeauty.com/string-utilities",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "String Utilities | CodeBeauty",
-    description: "Process and manipulate strings with our powerful string utility tools. Convert, format, and analyze text data.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/string-utilities",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function Page() {
   return <StringUtilities />

@@ -9,6 +9,7 @@ import {
   Heart,
   ChevronDown,
   LoaderPinwheelIcon,
+  Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ChangeEvent } from 'react';
@@ -32,7 +33,7 @@ export function Footer() {
         setLoading(false);
       } else {
         toast.error('Failed to send email');
-         setLoading(false);
+        setLoading(false);
       }
     });
   };
@@ -41,13 +42,6 @@ export function Footer() {
     sendMail();
     //
   };
-
-  const socialLinks = [
-    { name: 'GitHub', icon: Github, href: 'https://github.com/codebeauty' },
-    { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/codebeauty' },
-    { name: 'YouTube', icon: Youtube, href: 'https://youtube.com/codebeauty' },
-    { name: 'Email', icon: Mail, href: 'mailto:hello@codebeauty.com' },
-  ];
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) => ({
@@ -79,22 +73,6 @@ export function Footer() {
                   <span className="text-xs text-gray-500 -mt-1">Power Your Code with AI</span>
                 </div>
               </Link>
-
-              {/* Social Links */}
-              <div className="flex items-center space-x-3">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    className="p-2.5 rounded-xl text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-300 group"
-                    aria-label={`Follow us on ${social.name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <social.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  </a>
-                ))}
-              </div>
             </div>
 
             {/* Footer Links - Takes 9 columns, divided into sections */}
@@ -165,7 +143,7 @@ export function Footer() {
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 text-white font-bold rounded-r-xl text-sm whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
               >
-                {loading ? (<LoaderPinwheelIcon className="animate-spin w-5 h-5" />) : 'Subscribe'}
+                {loading ? <LoaderPinwheelIcon className="animate-spin w-5 h-5" /> : 'Subscribe'}
               </button>
             </div>
           </div>
@@ -173,21 +151,50 @@ export function Footer() {
 
         {/* Bottom Footer */}
         <div className="py-6 border-t border-purple-100/50">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>© 2024 AI Online Tools. All rights reserved.</span>
-              <span className="hidden md:block">•</span>
-              <button className="flex items-center space-x-1 hover:text-purple-600 transition-colors duration-300 group">
-                <Star className="w-4 h-4 group-hover:fill-purple-600 transition-all duration-300" />
-                <span>Favorites (3)</span>
-              </button>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-600">
+            {/* Copyright */}
+            <div className="flex items-center space-x-2">
+              <span>© {new Date().getFullYear()} AI Online Tools. All rights reserved.</span>
             </div>
 
-            <div className="flex items-center space-x-1 text-sm text-gray-600">
-              <span>Made with</span>
-              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-              <span>for developers</span>
+            {/* Contact */}
+            <a
+              href="mailto:support@aionlinetoolss.com"
+              className="flex items-center space-x-1 hover:text-purple-600 transition-colors group"
+            >
+              <Mail className="w-4 h-4 group-hover:fill-purple-600" />
+              <span>support@aionlinetoolss.com</span>
+            </a>
+
+            {/* About us */}
+            <div className="flex items-center space-x-4">
+              <a href="/about" className="hover:text-purple-600 transition-colors">
+                About Us
+              </a>
+              <a href="/disclaimer" className="hover:text-purple-600 transition-colors">
+                Disclaimer Us
+              </a>
+              {/* Policy Links */}
+              <a href="/privacy-policy" className="hover:text-purple-600 transition-colors">
+                Privacy Policy
+              </a>
+
+              <a href="/terms-of-service" className="hover:text-purple-600 transition-colors">
+                Terms of Service
+              </a>
+              <a href="/contact" className="hover:text-purple-600 transition-colors">
+                Contact Us
+              </a>
             </div>
+
+            {/* Developer */}
+            <a
+              href="/contact"
+              className="flex items-center space-x-1 hover:text-purple-600 transition-colors"
+            >
+              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+              <span>Contact Developer</span>
+            </a>
           </div>
         </div>
       </div>

@@ -1,27 +1,21 @@
 import { JsonConverters } from "@/components/sections/json-converters";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "JSON Converters | CodeBeauty",
-  description: "Convert JSON data to various formats including CSV, XML, YAML, HTML and more with our powerful JSON converter tools.",
-  keywords: "json converter, json to csv, json to xml, json to yaml, json tools",
-  openGraph: {
-    title: "JSON Converters | CodeBeauty",
-    description: "Convert JSON data to various formats including CSV, XML, YAML, HTML and more with our powerful JSON converter tools.",
-    url: "https://codebeauty.com/json-converters",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "JSON Converters | CodeBeauty",
-    description: "Convert JSON data to various formats including CSV, XML, YAML, HTML and more with our powerful JSON converter tools.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/json-converters",
-  },
-};
-
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 export default function jsonconvertersPage() {
   return (
     <JsonConverters />

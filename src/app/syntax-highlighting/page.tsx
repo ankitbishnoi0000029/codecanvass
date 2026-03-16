@@ -1,26 +1,21 @@
 import { SyntaxHighlighting } from "@/components/sections/syntax-highlighting";
 import type { Metadata } from "next";
+import { buildMetadata } from "@/utils/seo/metdata";
 
-export const metadata: Metadata = {
-  title: "Syntax Highlighting | CodeBeauty",
-  description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
-  keywords: "syntax highlighting, code highlighting, syntax highlighter, code formatter",
-  openGraph: {
-    title: "Syntax Highlighting | CodeBeauty",
-    description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
-    url: "https://codebeauty.com/syntax-highlighting",
-    type: "website",
-    siteName: "CodeBeauty",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Syntax Highlighting | CodeBeauty",
-    description: "Highlight syntax in your code with our powerful syntax highlighting tools. Support for multiple programming languages.",
-  },
-  alternates: {
-    canonical: "https://codebeauty.com/syntax-highlighting",
-  },
-};
+interface PageProps {
+  params: Promise<{ tool: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tool } = await params;
+  return buildMetadata({
+    table: "html_converters",
+    urlId: tool,
+    route: `${tool}`,
+    fallbackTitle:       "XML Converters Online",
+    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
+    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
+  });
+}
 
 export default function syntaxhighlightingPage() {
   return (
