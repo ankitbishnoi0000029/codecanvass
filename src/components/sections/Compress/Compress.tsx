@@ -627,7 +627,7 @@ export default function CompressorHub() {
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button
             onClick={() => setActiveCategory("all")}
-            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeCategory === "all" ? "bg-violet-600 text-white shadow-lg shadow-violet-900/40" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
+            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeCategory === "all" ? "bg-violet-600 shadow-lg shadow-violet-900/40" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"}`}
           >
             All · {totalTools}
           </button>
