@@ -46,6 +46,7 @@ export function Navbar() {
   }, []);
 
   const navItems = [
+    { name: 'Compress Hub', href: '/compress' },
     { name: 'JSON Formatter', href: '/json-formatter' },
     { name: 'XML Formatter', href: '/xml-formatter' },
     { name: 'Generator qr', href: '/qrGenerator' },

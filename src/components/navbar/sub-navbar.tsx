@@ -83,10 +83,10 @@ export function SubNavbar() {
   return (
     <>
       <div
-        className={`fixed left-0 right-0 z-40 transition-all duration-300 ${
+        className={`fixed left-0 right-0 z-40 transition-all duration-500 ${
           isScrolled
             ? "top-[5px] bg-white shadow-md border-b border-gray-200"
-            : "top-[55px] bg-white/80 backdrop-blur-md border-b border-white/40"
+            : "top-[40px] bg-white/80 backdrop-blur-md border-b border-white/40"
         }`}
       >
         {/* ── Mobile Toggle ── */}

@@ -119,7 +119,7 @@
 
   body {
     @apply bg-background text-foreground;
-    background-image: linear-gradient(to bottom right, #faf5ff, #fdf2f8, #ffffff);
+    /* background-image: linear-gradient(to bottom right, #faf5ff, #fdf2f8, #ffffff); */
   }
 
   /* section {

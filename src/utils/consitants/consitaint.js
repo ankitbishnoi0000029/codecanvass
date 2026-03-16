@@ -526,6 +526,7 @@ export const category = [
   },
 ];
 export const categories = [
+  { id: 'home', name: 'Home Page', icon: "Sparkles" },
   { id: 'popular', name: 'Popular Tools', icon: "TrendingUp" },
   { id: 'navbar', name: 'Navbar', icon: "SiNaver" },
   { id: 'trendingtools', name: 'Trending Tools', icon: "Sparkles" },
