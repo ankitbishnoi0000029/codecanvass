@@ -1,6 +1,6 @@
-"use client";
-import { useState, useEffect } from "react";
-import { Menu, X, Sparkles } from "lucide-react";
+'use client';
+import { useState, useEffect } from 'react';
+import { Menu, X, Sparkles } from 'lucide-react';
 
 // Custom hook to detect Dark Reader
 const useDarkReader = () => {
@@ -15,9 +15,10 @@ const useDarkReader = () => {
 
       // Dark Reader adds specific CSS variables or modifies elements
       const computedStyle = getComputedStyle(testElement);
-      const hasDarkReaderVars = computedStyle.getPropertyValue('--darkreader-background') ||
-                               computedStyle.getPropertyValue('--darkreader-text') ||
-                               testElement.getAttribute('data-darkreader-inline-bgcolor');
+      const hasDarkReaderVars =
+        computedStyle.getPropertyValue('--darkreader-background') ||
+        computedStyle.getPropertyValue('--darkreader-text') ||
+        testElement.getAttribute('data-darkreader-inline-bgcolor');
 
       document.body.removeChild(testElement);
       setHasDarkReader(!!hasDarkReaderVars);
@@ -40,38 +41,37 @@ export function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navItems = [
-    { name: "JSON Formatter", href: "/json-formatter" },
-    { name: "XML Formatter", href: "/xml-formatter" },
-    { name: "Generator qr", href: "/qrGenerator" },
-    { name: "Remove Background", href: "/backgroundremover" },
-    { name: "Share File", href: "/sharefile" },
-        { name: "Video downloder", href: "/videodownloder" },
-
-    { name: "Blog", href: "/blog" },
+    { name: 'JSON Formatter', href: '/json-formatter' },
+    { name: 'XML Formatter', href: '/xml-formatter' },
+    { name: 'Generator qr', href: '/qrGenerator' },
+    { name: 'Remove Background', href: '/backgroundremover' },
+    { name: 'Share File', href: '/sharefile' },
+    { name: 'Video downloder', href: '/videodownloder' },
+    { name: 'Blog', href: '/blog' },
   ];
 
   return (
     <header
       className={`top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled ? "bg-white shadow-md" : "bg-white/95 backdrop-blur"
+        isScrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur'
       }`}
       suppressHydrationWarning={true}
     >
-      <nav
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-        aria-label="Main navigation"
-      >
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
         {/* Navbar container (height reduced) */}
         <div className="flex items-center justify-between h-8 lg:h-10">
           {/* Logo */}
           <div className="flex-shrink-0 z-10">
             <a href="/" className="flex items-center space-x-2 group">
-              <div className="relative w-7 h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md" suppressHydrationWarning={true}>
+              <div
+                className="relative w-7 h-7 lg:w-8 lg:h-8 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md"
+                suppressHydrationWarning={true}
+              >
                 <Sparkles className="w-4 h-4 text-white" strokeWidth={2.5} />
               </div>
               <div className="flex flex-col">
@@ -102,13 +102,9 @@ export function Navbar() {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-1.5 rounded-md text-gray-700 hover:bg-purple-50 transition"
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            {isMobileMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </nav>
@@ -117,8 +113,8 @@ export function Navbar() {
       <div
         className={`lg:hidden transition-all duration-500 ease-in-out ${
           isMobileMenuOpen
-            ? "max-h-[calc(100vh-4rem)] opacity-100"
-            : "max-h-0 opacity-0 overflow-hidden"
+            ? 'max-h-[calc(100vh-4rem)] opacity-100'
+            : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
         <div className="px-4 pt-2 pb-4 space-y-1 bg-white border-t border-gray-200">

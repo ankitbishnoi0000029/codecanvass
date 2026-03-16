@@ -93,10 +93,6 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
 
-  verification: {
-    google: "YOUR_GOOGLE_VERIFICATION_CODE",
-  },
-
   formatDetection: {
     email: false,
     address: false,
