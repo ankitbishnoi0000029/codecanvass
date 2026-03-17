@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
         crypto: false,
       };
 
-      // Ignore node-specific modules for browser builds
       config.resolve.alias = {
         ...config.resolve.alias,
         "sharp$": false,
@@ -27,7 +26,6 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Handle WASM and binary files
     config.module.rules.push({
       test: /\.wasm$/,
       type: "asset/resource",
@@ -36,10 +34,10 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // CRITICAL: These headers enable SharedArrayBuffer which is required for ONNX runtime
   async headers() {
     return [
       {
+        // CRITICAL: SharedArrayBuffer के लिए ONNX runtime को यह चाहिए
         source: "/:path*",
         headers: [
           {
@@ -49,6 +47,16 @@ const nextConfig: NextConfig = {
           {
             key: "Cross-Origin-Opener-Policy",
             value: "same-origin",
+          },
+        ],
+      },
+      {
+        // imgly model files को browser में 1 साल के लिए cache करो
+        source: "/imgly/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },

@@ -50,7 +50,7 @@ export function Navbar() {
     { name: 'JSON Formatter', href: '/json-formatter' },
     { name: 'XML Formatter', href: '/xml-formatter' },
     { name: 'Generator qr', href: '/qrGenerator' },
-    { name: 'Remove Background', href: '/backgroundremover' },
+    { name: 'Remove Background', href: '/bg-remove' },
     { name: 'Share File', href: '/sharefile' },
     { name: 'Video downloder', href: '/videodownloder' },
     { name: 'Blog', href: '/blog' },

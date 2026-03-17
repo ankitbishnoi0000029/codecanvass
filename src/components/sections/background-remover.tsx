@@ -15,20 +15,30 @@ import { dataType } from '@/utils/types/uiTypes';
 import { getNavbar } from '@/actions/dbAction';
 import Meta from './meta';
 
-// Files come from @imgly/background-removal-DATA (not the main package).
-// That package contains: resources.json + hash-named chunk files + wasm files.
-// Copy ALL of them to public/imgly/ via postinstall — see package.json below.
-//
-// package.json scripts:
-//   "postinstall": "copyfiles -f \"node_modules/@imgly/background-removal-data/dist/*\" public/imgly/"
-//
-// Also install the dep:  npm install --save-dev copyfiles
-//
-// Needs full absolute URL — relative paths cause "Invalid base URL" inside the lib.
+// All model files must be copied to public/imgly/ via postinstall script.
+// See package.json setup instructions below this component.
 const PUBLIC_PATH =
   typeof window !== 'undefined'
     ? `${window.location.origin}/imgly/`
     : `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/imgly/`;
+
+// ─── Global singleton so model loads only once per browser session ───────────
+let removeBackgroundFn: ((file: File, opts: object) => Promise<Blob>) | null = null;
+let modelLoadPromise: Promise<void> | null = null;
+
+async function ensureModelLoaded(): Promise<void> {
+  if (removeBackgroundFn) return; // already ready
+  if (modelLoadPromise) return modelLoadPromise; // loading in progress
+
+  modelLoadPromise = (async () => {
+    const bgRemoval = await import('@imgly/background-removal');
+    // Warm-up: preload silently in background — files served from /public/imgly/
+    await bgRemoval.preload({ model: 'isnet', publicPath: PUBLIC_PATH });
+    removeBackgroundFn = bgRemoval.removeBackground;
+  })();
+
+  return modelLoadPromise;
+}
 
 export function BackgroundRemover() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -39,7 +49,6 @@ export function BackgroundRemover() {
   const [customColor, setCustomColor] = useState('#ffffff');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLibraryReady, setIsLibraryReady] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,25 +67,12 @@ export function BackgroundRemover() {
     fetchData();
   }, []);
 
-  // Preload model from local /public/imgly/ — fast, served from your own server
+  // ── Silently preload model in background — no loading UI shown to user ──────
   useEffect(() => {
-    let mounted = true;
-    const init = async () => {
-      try {
-        const bgRemoval = await import('@imgly/background-removal');
-        await bgRemoval.preload({
-          model: 'isnet',
-        });
-        if (mounted) setIsLibraryReady(true);
-      } catch (err) {
-        console.error('Model init error:', err);
-        if (mounted) setError('Failed to load AI model. Please refresh the page.');
-      }
-    };
-    init();
-    return () => {
-      mounted = false;
-    };
+    // Fire and forget — user sees no spinner, model warms up quietly
+    ensureModelLoaded().catch((err) => {
+      console.warn('Background model preload failed (will retry on use):', err);
+    });
   }, []);
 
   const presetColors = [
@@ -125,10 +121,6 @@ export function BackgroundRemover() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!isLibraryReady) {
-      setError('AI model is still initialising. Please wait a moment.');
-      return;
-    }
     if (!file.type.startsWith('image/')) {
       setError('Please upload a valid image file.');
       return;
@@ -150,14 +142,17 @@ export function BackgroundRemover() {
     let progressInterval: ReturnType<typeof setInterval> | null = null;
 
     try {
+      // If model isn't ready yet (rare — user uploaded before preload finished),
+      // wait here. A spinner is shown on the result panel, not the upload screen.
+      await ensureModelLoaded();
+
       progressInterval = setInterval(() => {
         setProgress((prev) => (prev >= 90 ? prev : prev + 10));
       }, 300);
 
-      const { removeBackground } = await import('@imgly/background-removal');
-
-      const blob = await removeBackground(file, {
+      const blob = await removeBackgroundFn!(file, {
         model: 'isnet',
+        publicPath: PUBLIC_PATH,
         output: { format: 'image/png', quality: 1 },
         progress: (_key: string, current: number, total: number) => {
           const pct = total ? Math.round((current / total) * 100) : 0;
@@ -170,11 +165,10 @@ export function BackgroundRemover() {
     } catch (err) {
       console.error('Background removal error:', err);
       setError(
-        'Error removing background. Possible causes:\n' +
-          '1. Image format not supported\n' +
-          '2. Model files missing — run: npm run postinstall\n' +
-          '3. Browser compatibility issue\n\n' +
-          'Try refreshing the page or using a different image.'
+        'Error removing background. Please try:\n' +
+          '1. Refreshing the page\n' +
+          '2. Using a different image format (PNG/JPG)\n' +
+          '3. Checking your internet connection'
       );
       setProgress(0);
     } finally {
@@ -293,29 +287,8 @@ export function BackgroundRemover() {
                 </div>
               )}
 
-              {/* Model initialising */}
-              {!isLibraryReady && !error && (
-                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="animate-spin text-blue-600 shrink-0" size={20} />
-                    <div>
-                      <p className="font-medium text-blue-700">Initialising AI Model…</p>
-                      <p className="text-sm text-blue-600 mt-1">
-                        Loading from server — ready in a moment.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Upload Area */}
-              <div
-                className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-200 ${
-                  isLibraryReady && !error
-                    ? 'border-gray-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50/30'
-                    : 'border-gray-200 opacity-50 cursor-not-allowed'
-                }`}
-              >
+              {/* Upload Area — always shown immediately, no blocking spinner */}
+              <div className="border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-200 border-gray-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50/30">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -323,25 +296,15 @@ export function BackgroundRemover() {
                   onChange={handleImageUpload}
                   className="hidden"
                   id="upload"
-                  disabled={!isLibraryReady || !!error}
                 />
-                <label
-                  htmlFor="upload"
-                  className={`flex flex-col items-center ${
-                    isLibraryReady && !error ? 'cursor-pointer' : 'cursor-not-allowed'
-                  }`}
-                >
+                <label htmlFor="upload" className="flex flex-col items-center cursor-pointer">
                   <div className="bg-gradient-to-br from-blue-500 to-purple-500 w-20 h-20 rounded-2xl flex items-center justify-center mb-4">
                     <Upload className="w-10 h-10 text-white" />
                   </div>
                   <span className="text-2xl font-semibold text-gray-900 mb-2">
-                    {isLibraryReady ? 'Upload Your Image' : 'Preparing AI Model…'}
+                    Upload Your Image
                   </span>
-                  <p className="text-gray-500 mb-4">
-                    {isLibraryReady
-                      ? 'Drag and drop or click to browse'
-                      : 'Please wait while the model initialises'}
-                  </p>
+                  <p className="text-gray-500 mb-4">Drag and drop or click to browse</p>
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <span>Supports: PNG, JPG, JPEG, WebP</span>
                     <span>•</span>
