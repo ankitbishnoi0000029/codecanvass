@@ -83,10 +83,10 @@ export function SubNavbar() {
   return (
     <>
       <div
-        className={`fixed left-0 right-0 z-40 transition-all duration-500 ${
+        className={`fixed left-0 right-0 z-40 transition-all duration-500 w-screen ${
           isScrolled
             ? "top-[5px] bg-white shadow-md border-b border-gray-200"
-            : "top-[40px] bg-white/80 backdrop-blur-md border-b border-white/40"
+            : "top-[50px] bg-white/80 backdrop-blur-md border-b border-white/40"
         }`}
       >
         {/* ── Mobile Toggle ── */}
@@ -94,14 +94,14 @@ export function SubNavbar() {
           <h2 className="font-semibold text-base text-gray-800">Categories</h2>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 rounded-lg border border-gray-200 bg-white shadow-sm text-gray-600 hover:bg-purple-50 transition"
+            className="p-2 rounded-lg border border-gray-200 bg-white shadow-sm text-sm text-gray-600 hover:bg-purple-50 transition"
           >
             {mobileOpen ? "✕" : "☰"}
           </button>
         </div>
 
         {/* ── Desktop Menu ── */}
-        <nav className="hidden lg:flex justify-center px-6 py-1.5">
+        <nav className="hidden lg:flex justify-center px-2 ">
           <ul className="flex flex-wrap justify-center items-center">
             {mergedCategories.map((cat) => (
               <li
@@ -112,7 +112,7 @@ export function SubNavbar() {
                 onMouseLeave={handleMouseLeave}
               >
                 {/* Trigger */}
-                <button className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 whitespace-nowrap">
+                <button className="flex items-center gap-1 py-2 px-1.5 rounded-lg text-xs font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 whitespace-nowrap">
                   {cat.name}
                   <svg
                     className={`w-3 h-3 transition-transform duration-200 text-gray-400 ${activeMenu === cat.id ? "rotate-180 text-purple-500" : ""}`}

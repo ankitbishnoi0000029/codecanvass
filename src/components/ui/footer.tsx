@@ -1,15 +1,10 @@
 'use client';
 import {
   Sparkles,
-  Star,
-  Github,
-  Twitter,
-  Youtube,
   Mail,
   Heart,
   ChevronDown,
   LoaderPinwheelIcon,
-  Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type ChangeEvent } from 'react';

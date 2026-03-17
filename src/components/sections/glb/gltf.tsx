@@ -85,44 +85,344 @@ function Slider({ label, value, min, max, step=1, unit, onChange, disabled }: {
   );
 }
 
-// ─── Three.js 3D Viewer ───────────────────────────────────────────────────────
+// ─── Inline minimal GLTFLoader factory ───────────────────────────────────────
+// Builds a GLTFLoader from the already-loaded THREE global.
+// This avoids any external CDN dependency beyond three.min.js itself.
+function buildGLTFLoader(T: any) {
+  // If a prior run already attached it, reuse.
+  if (T._GLTFLoaderReady) return new T._GLTFLoader();
+
+  // ── Minimal GLB/GLTF parser ──────────────────────────────────────────────
+  // Supports: GLB binary container, embedded base64 data URIs, basic PBR materials.
+  // Animations and skins are loaded structurally but not fully rigged (sufficient for preview).
+
+  const BINARY_EXTENSION_HEADER_MAGIC = 0x46546C67;
+  const BINARY_EXTENSION_CHUNK_TYPE_JSON = 0x4E4F534A;
+  const BINARY_EXTENSION_CHUNK_TYPE_BIN  = 0x004E4942;
+
+  class GLTFLoader {
+    load(url: string, onLoad: (g: any)=>void, _onProgress: any, onError: (e:any)=>void) {
+      fetch(url)
+        .then(r => r.arrayBuffer())
+        .then(buf => this._parse(buf, url, onLoad, onError))
+        .catch(onError);
+    }
+
+    _parse(buffer: ArrayBuffer, url: string, onLoad: (g:any)=>void, onError:(e:any)=>void) {
+      try {
+        const magic = new DataView(buffer).getUint32(0, true);
+        if (magic === BINARY_EXTENSION_HEADER_MAGIC) {
+          this._parseGLB(buffer, url, onLoad, onError);
+        } else {
+          const text = new TextDecoder().decode(buffer);
+          const json = JSON.parse(text);
+          this._parseGLTF(json, null, url, onLoad, onError);
+        }
+      } catch(e) { onError(e); }
+    }
+
+    _parseGLB(buffer: ArrayBuffer, url: string, onLoad: (g:any)=>void, onError:(e:any)=>void) {
+      const dv = new DataView(buffer);
+      // header: magic(4) version(4) length(4)
+      let offset = 12;
+      let json: any = null;
+      let binaryChunk: ArrayBuffer | null = null;
+
+      while (offset < buffer.byteLength) {
+        const chunkLength = dv.getUint32(offset, true);
+        const chunkType   = dv.getUint32(offset + 4, true);
+        offset += 8;
+        if (chunkType === BINARY_EXTENSION_CHUNK_TYPE_JSON) {
+          const jsonStr = new TextDecoder().decode(new Uint8Array(buffer, offset, chunkLength));
+          json = JSON.parse(jsonStr);
+        } else if (chunkType === BINARY_EXTENSION_CHUNK_TYPE_BIN) {
+          binaryChunk = buffer.slice(offset, offset + chunkLength);
+        }
+        offset += chunkLength;
+      }
+      if (!json) { onError(new Error("GLB: no JSON chunk")); return; }
+      this._parseGLTF(json, binaryChunk, url, onLoad, onError);
+    }
+
+    async _parseGLTF(json: any, binaryChunk: ArrayBuffer|null, _url: string, onLoad:(g:any)=>void, onError:(e:any)=>void) {
+      try {
+        // ── Resolve buffers ───────────────────────────────────────────────
+        const buffers: ArrayBuffer[] = [];
+        for (const buf of (json.buffers || [])) {
+          if (buf.uri) {
+            if (buf.uri.startsWith("data:")) {
+              const b64 = buf.uri.split(",")[1];
+              const bin = atob(b64);
+              const arr = new Uint8Array(bin.length);
+              for (let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+              buffers.push(arr.buffer);
+            } else {
+              const resp = await fetch(buf.uri);
+              buffers.push(await resp.arrayBuffer());
+            }
+          } else if (binaryChunk) {
+            buffers.push(binaryChunk);
+          }
+        }
+
+        // ── Resolve images ────────────────────────────────────────────────
+        const images: HTMLImageElement[] = [];
+        for (const img of (json.images || [])) {
+          images.push(await new Promise<HTMLImageElement>((res, rej) => {
+            const el = new Image();
+            el.onload = () => res(el);
+            el.onerror = rej;
+            if (img.uri) {
+              el.src = img.uri.startsWith("data:") ? img.uri : img.uri;
+            } else if (img.bufferView !== undefined) {
+              const bv = json.bufferViews[img.bufferView];
+              const arr = new Uint8Array(buffers[bv.buffer ?? 0], bv.byteOffset ?? 0, bv.byteLength);
+              const mime = img.mimeType || "image/png";
+              el.src = URL.createObjectURL(new Blob([arr], { type: mime }));
+            } else {
+              res(el); // empty
+            }
+          }));
+        }
+
+        // ── Textures ──────────────────────────────────────────────────────
+        const textures: any[] = (json.textures || []).map((t: any) => {
+          const tex = new T.Texture(images[t.source ?? 0] ?? null);
+          tex.flipY = false;
+          tex.needsUpdate = true;
+          return tex;
+        });
+
+        // ── Materials ─────────────────────────────────────────────────────
+        const materials: any[] = (json.materials || []).map((m: any) => {
+          const pbr = m.pbrMetallicRoughness || {};
+          const mat = new T.MeshStandardMaterial({
+            name: m.name || "",
+            side: m.doubleSided ? T.DoubleSide : T.FrontSide,
+            transparent: m.alphaMode === "BLEND",
+            alphaTest: m.alphaMode === "MASK" ? (m.alphaCutoff ?? 0.5) : 0,
+          });
+          if (pbr.baseColorTexture) {
+            mat.map = textures[pbr.baseColorTexture.index] ?? null;
+          }
+          if (pbr.baseColorFactor) {
+            const [r,g,b,a] = pbr.baseColorFactor;
+            mat.color.setRGB(r,g,b);
+            mat.opacity = a ?? 1;
+          }
+          mat.metalness = pbr.metallicFactor ?? 1;
+          mat.roughness = pbr.roughnessFactor ?? 1;
+          if (pbr.metallicRoughnessTexture) {
+            mat.metalnessMap = textures[pbr.metallicRoughnessTexture.index] ?? null;
+            mat.roughnessMap = textures[pbr.metallicRoughnessTexture.index] ?? null;
+          }
+          if (m.normalTexture) {
+            mat.normalMap = textures[m.normalTexture.index] ?? null;
+          }
+          if (m.emissiveTexture) {
+            mat.emissiveMap = textures[m.emissiveTexture.index] ?? null;
+          }
+          if (m.emissiveFactor) {
+            const [r,g,b] = m.emissiveFactor;
+            mat.emissive.setRGB(r,g,b);
+          }
+          return mat;
+        });
+
+        // ── Accessor helper ───────────────────────────────────────────────
+        const TYPE_SIZES: Record<string,number> = { SCALAR:1, VEC2:2, VEC3:3, VEC4:4, MAT2:4, MAT3:9, MAT4:16 };
+        const COMPONENT: Record<number,[any,number]> = {
+          5120:[Int8Array,1], 5121:[Uint8Array,1], 5122:[Int16Array,2],
+          5123:[Uint16Array,2], 5125:[Uint32Array,4], 5126:[Float32Array,4],
+        };
+
+        const getAccessor = (idx: number) => {
+          const acc = json.accessors[idx];
+          const bv  = json.bufferViews[acc.bufferView];
+          const [TypedArr, byteSize] = COMPONENT[acc.componentType];
+          const typeSize = TYPE_SIZES[acc.type] ?? 1;
+          const byteOffset = (bv.byteOffset ?? 0) + (acc.byteOffset ?? 0);
+          const stride = bv.byteStride ?? (typeSize * byteSize);
+          const buf = buffers[bv.buffer ?? 0];
+          if (stride === typeSize * byteSize) {
+            return new TypedArr(buf, byteOffset, acc.count * typeSize);
+          }
+          // interleaved
+          const out = new TypedArr(acc.count * typeSize);
+          const src = new TypedArr(buf, byteOffset);
+          for (let i=0;i<acc.count;i++) {
+            const si = i * (stride / byteSize);
+            for (let j=0;j<typeSize;j++) out[i*typeSize+j] = src[si+j];
+          }
+          return out;
+        };
+
+        // ── Meshes → THREE.Mesh ───────────────────────────────────────────
+        const buildMesh = (meshDef: any): any => {
+          const group = new T.Group();
+          group.name = meshDef.name || "";
+          for (const prim of meshDef.primitives) {
+            const geo = new T.BufferGeometry();
+
+            const attrs = prim.attributes || {};
+            if (attrs.POSITION !== undefined) {
+              const pos = getAccessor(attrs.POSITION);
+              geo.setAttribute("position", new T.BufferAttribute(new Float32Array(pos), 3));
+            }
+            if (attrs.NORMAL !== undefined) {
+              geo.setAttribute("normal", new T.BufferAttribute(new Float32Array(getAccessor(attrs.NORMAL)), 3));
+            }
+            if (attrs.TEXCOORD_0 !== undefined) {
+              geo.setAttribute("uv", new T.BufferAttribute(new Float32Array(getAccessor(attrs.TEXCOORD_0)), 2));
+            }
+            if (attrs.COLOR_0 !== undefined) {
+              const colorData = getAccessor(attrs.COLOR_0);
+              const colorAcc = json.accessors[attrs.COLOR_0];
+              const stride = TYPE_SIZES[colorAcc.type] ?? 3;
+              geo.setAttribute("color", new T.BufferAttribute(new Float32Array(colorData), stride));
+            }
+            if (prim.indices !== undefined) {
+              const idx = getAccessor(prim.indices);
+              geo.setIndex(new T.BufferAttribute(
+                idx instanceof Uint32Array ? idx : new Uint32Array(idx), 1
+              ));
+            }
+            if (!geo.attributes.normal) geo.computeVertexNormals();
+
+            const mat = prim.material !== undefined
+              ? materials[prim.material]
+              : new T.MeshStandardMaterial({ color: 0xcccccc });
+
+            const mesh = new T.Mesh(geo, mat);
+            group.add(mesh);
+          }
+          return group.children.length === 1 ? group.children[0] : group;
+        };
+
+        // ── Scene graph ───────────────────────────────────────────────────
+        const nodeMeshes: any[] = new Array(json.nodes?.length ?? 0).fill(null);
+        const buildNode = (nodeIdx: number): any => {
+          const nd = json.nodes[nodeIdx];
+          let obj: any;
+          if (nd.mesh !== undefined) {
+            obj = buildMesh(json.meshes[nd.mesh]);
+          } else {
+            obj = new T.Group();
+          }
+          obj.name = nd.name || "";
+
+          if (nd.matrix) {
+            obj.matrix.fromArray(nd.matrix);
+            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+          } else {
+            if (nd.translation) obj.position.fromArray(nd.translation);
+            if (nd.rotation)    obj.quaternion.fromArray(nd.rotation);
+            if (nd.scale)       obj.scale.fromArray(nd.scale);
+          }
+
+          for (const child of (nd.children || [])) {
+            obj.add(buildNode(child));
+          }
+          nodeMeshes[nodeIdx] = obj;
+          return obj;
+        };
+
+        const sceneRoot = new T.Group();
+        const sceneDef = json.scenes?.[json.scene ?? 0];
+        for (const nodeIdx of (sceneDef?.nodes || [])) {
+          sceneRoot.add(buildNode(nodeIdx));
+        }
+
+        // ── Animations ────────────────────────────────────────────────────
+        const animations: any[] = [];
+        for (const anim of (json.animations || [])) {
+          const tracks: any[] = [];
+          for (const ch of (anim.channels || [])) {
+            const sampler = anim.samplers[ch.sampler];
+            const target  = ch.target;
+            if (target.node === undefined) continue;
+            const node = nodeMeshes[target.node];
+            if (!node) continue;
+
+            const times  = new Float32Array(getAccessor(sampler.input));
+            const values = new Float32Array(getAccessor(sampler.output));
+
+            const path = target.path;
+            const name = `${node.name ?? "node"}.${path}`;
+            let track: any;
+            if (path === "translation") {
+              track = new T.VectorKeyframeTrack(`${node.uuid}.position`, times, values);
+            } else if (path === "rotation") {
+              track = new T.QuaternionKeyframeTrack(`${node.uuid}.quaternion`, times, values);
+            } else if (path === "scale") {
+              track = new T.VectorKeyframeTrack(`${node.uuid}.scale`, times, values);
+            }
+            if (track) tracks.push(track);
+          }
+          if (tracks.length) {
+            animations.push(new T.AnimationClip(anim.name || "anim", -1, tracks));
+          }
+        }
+
+        onLoad({ scene: sceneRoot, scenes: [sceneRoot], animations, asset: json.asset ?? {} });
+      } catch(e) { onError(e); }
+    }
+  }
+
+  T._GLTFLoader = GLTFLoader;
+  T._GLTFLoaderReady = true;
+  return new GLTFLoader();
+}
+
+// ─── Three.js 3D Viewer ────────────────────────────────────────────────────
 function ThreeViewer({ file, wireframe }: { file: File|null; wireframe: boolean }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef({
     renderer: null as any, scene: null as any, camera: null as any,
     mixer: null as any, clock: null as any, model: null as any,
-    animId: 0, ready: false,
+    animId: 0,
+    // true once THREE + renderer loop are running
+    threeReady: false,
     drag: false, lastX: 0, lastY: 0, rotY: 0.4, rotX: 0.15,
   });
+
   const [status, setStatus] = useState<"idle"|"loading-three"|"loading-model"|"ready"|"error">("idle");
   const [errMsg, setErrMsg] = useState("");
-  const fileRef = useRef<File|null>(null);
+
+  // Keep a ref to the latest file so the init callback can load it
+  const pendingFileRef = useRef<File|null>(null);
   const wireRef = useRef(wireframe);
   wireRef.current = wireframe;
 
-  // 1. Boot Three.js once
+  // ── 1. Boot Three.js once ──────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
     setStatus("loading-three");
 
-    const load = async () => {
-      if (!(window as any).THREE) {
+    const init = async () => {
+      const win = window as any;
+
+      if (!win.THREE) {
         await new Promise<void>((res, rej) => {
           const s = document.createElement("script");
+          // Only cdnjs is guaranteed in the CSP allowlist
           s.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
-          s.onload = () => res(); s.onerror = rej;
+          s.onload = () => res();
+          s.onerror = () => rej(new Error("Failed to load three.min.js"));
           document.head.appendChild(s);
         });
       }
-      const T = (window as any).THREE;
+
+      const T = win.THREE;
       const el = mountRef.current!;
-      const W = el.clientWidth||400, H = el.clientHeight||400;
+      const W = el.clientWidth  || 400;
+      const H = el.clientHeight || 400;
 
       const scene = new T.Scene();
       scene.background = new T.Color(0x0d1117);
-      const grid = new T.GridHelper(10, 20, 0x1c2a3a, 0x1c2a3a);
-      scene.add(grid);
 
+      // Grid + lights
+      scene.add(new T.GridHelper(10, 20, 0x1c2a3a, 0x1c2a3a));
       const amb = new T.AmbientLight(0xffffff, 0.7); scene.add(amb);
       const d1 = new T.DirectionalLight(0xffffff, 1.4); d1.position.set(5,10,7); scene.add(d1);
       const d2 = new T.DirectionalLight(0x88bbff, 0.4); d2.position.set(-4,-2,-5); scene.add(d2);
@@ -131,40 +431,55 @@ function ThreeViewer({ file, wireframe }: { file: File|null; wireframe: boolean 
       const camera = new T.PerspectiveCamera(45, W/H, 0.001, 1000);
       camera.position.set(0, 1.2, 4);
 
-      const renderer = new T.WebGLRenderer({ antialias:true });
+      const renderer = new T.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(W, H);
-      renderer.outputEncoding = T.sRGBEncoding;
+      // NOTE: outputEncoding was removed/broken in r128 builds — omit it entirely.
+      // sRGB is handled by texture.encoding on a per-texture basis if needed.
       renderer.toneMapping = T.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.1;
       el.appendChild(renderer.domElement);
 
       const clock = new T.Clock();
       const st = stateRef.current;
-      st.renderer = renderer; st.scene = scene; st.camera = camera;
-      st.clock = clock; st.ready = true;
+      st.renderer = renderer;
+      st.scene = scene;
+      st.camera = camera;
+      st.clock = clock;
+      st.threeReady = true;
 
       const loop = () => {
         st.animId = requestAnimationFrame(loop);
-        if (st.mixer) st.mixer.update(clock.getDelta());
+        const dt = clock.getDelta();
+        if (st.mixer) st.mixer.update(dt);
         renderer.render(scene, camera);
       };
       loop();
 
       const ro = new ResizeObserver(() => {
         const w = el.clientWidth, h = el.clientHeight;
-        if (w && h) { renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix(); }
+        if (w && h) {
+          renderer.setSize(w, h);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }
       });
       ro.observe(el);
 
-      stateRef.current = { ...st, ready: true };
       setStatus("ready");
 
-      // Load file if already set
-      if (fileRef.current) loadModel(fileRef.current);
+      // If a file arrived before THREE finished loading, load it now
+      if (pendingFileRef.current) {
+        loadModelInner(pendingFileRef.current);
+      }
     };
 
-    load().catch(e => { setStatus("error"); setErrMsg("Failed to init renderer"); });
+    init().catch(e => {
+      console.error("[ThreeViewer]", e);
+      setStatus("error");
+      setErrMsg(e?.message || "Failed to initialise renderer");
+    });
+
     return () => {
       const st = stateRef.current;
       cancelAnimationFrame(st.animId);
@@ -172,100 +487,138 @@ function ThreeViewer({ file, wireframe }: { file: File|null; wireframe: boolean 
         try { mountRef.current.removeChild(st.renderer.domElement); } catch {}
         st.renderer.dispose();
       }
+      st.threeReady = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Load model when file changes
-  const loadModel = useCallback(async (f: File) => {
+  // ── 2. Internal load-model function (not a hook — called imperatively) ──
+  const loadModelInner = useCallback((f: File) => {
     const st = stateRef.current;
-    if (!st.ready) { fileRef.current = f; return; }
-    const T = (window as any).THREE;
+    if (!st.threeReady) {
+      // THREE not ready yet — stash and return; init() will call us when done
+      pendingFileRef.current = f;
+      return;
+    }
 
-    // Remove old model
+    const T = (window as any).THREE;
+    const objectUrl = URL.createObjectURL(f);
+
+    // Remove previous model
     if (st.model) { st.scene.remove(st.model); st.model = null; }
     if (st.mixer) { st.mixer = null; }
 
     setStatus("loading-model");
-    const url = URL.createObjectURL(f);
+    setErrMsg("");
 
     try {
-      // Parse GLB/GLTF manually
-      const buf = await f.arrayBuffer();
-      const gltf = await parseGLTF(T, buf, url);
-      URL.revokeObjectURL(url);
+      const loader = buildGLTFLoader(T);
+      loader.load(
+        objectUrl,
+        (gltf: any) => {
+          URL.revokeObjectURL(objectUrl);
 
-      const model = gltf.scene;
-      const box = new T.Box3().setFromObject(model);
-      const center = box.getCenter(new T.Vector3());
-      const size = box.getSize(new T.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.5 / maxDim;
+          const model = gltf.scene;
 
-      model.scale.setScalar(scale);
-      model.position.copy(center).multiplyScalar(-scale);
-      model.position.y -= (size.y * scale) * 0.5;
+          // Centre + scale
+          const box    = new T.Box3().setFromObject(model);
+          const center = box.getCenter(new T.Vector3());
+          const size   = box.getSize(new T.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          const scale  = 2.5 / maxDim;
 
-      model.rotation.y = st.rotY;
-      model.rotation.x = st.rotX;
+          model.scale.setScalar(scale);
+          model.position.copy(center).multiplyScalar(-scale);
+          model.position.y -= (size.y * scale) * 0.5;
+          model.rotation.y = st.rotY;
+          model.rotation.x = st.rotX;
 
-      if (wireRef.current) applyWireframe(model, true);
+          if (wireRef.current) applyWireframe(model, true);
 
-      st.scene.add(model);
-      st.model = model;
+          st.scene.add(model);
+          st.model = model;
 
-      if (gltf.animations?.length > 0) {
-        const mixer = new T.AnimationMixer(model);
-        gltf.animations.forEach((c: any) => mixer.clipAction(c).play());
-        st.mixer = mixer;
-      }
+          // Animations
+          if (gltf.animations?.length) {
+            const mixer = new T.AnimationMixer(model);
+            gltf.animations.forEach((clip: any) => mixer.clipAction(clip).play());
+            st.mixer = mixer;
+          }
 
-      st.camera.position.set(0, size.y*scale*0.4, maxDim*scale*1.8);
-      st.camera.lookAt(0, 0, 0);
+          // Adjust camera distance
+          st.camera.position.set(0, size.y * scale * 0.4, maxDim * scale * 1.8);
+          st.camera.lookAt(0, 0, 0);
 
-      setStatus("ready");
-    } catch(e: any) {
-      URL.revokeObjectURL(url);
+          setStatus("ready");
+        },
+        undefined,
+        (err: any) => {
+          URL.revokeObjectURL(objectUrl);
+          console.error("[ThreeViewer] load error", err);
+          setStatus("error");
+          setErrMsg(err?.message || "Failed to parse model");
+        }
+      );
+    } catch (e: any) {
+      URL.revokeObjectURL(objectUrl);
       setStatus("error");
-      setErrMsg("Could not parse model: " + (e?.message || "Unknown error"));
+      setErrMsg(e?.message || "Unexpected error");
     }
   }, []);
 
+  // ── 3. React to file prop changes ──────────────────────────────────────
   useEffect(() => {
-    if (file) { fileRef.current = file; loadModel(file); }
-    else {
+    if (file) {
+      pendingFileRef.current = file;
+      loadModelInner(file);
+    } else {
+      pendingFileRef.current = null;
       const st = stateRef.current;
-      if (st.model && st.scene) { st.scene.remove(st.model); st.model = null; }
-      if (status !== "loading-three") setStatus("ready");
+      if (st.model && st.scene) {
+        st.scene.remove(st.model);
+        st.model = null;
+        st.mixer = null;
+      }
+      // Only reset status if THREE is already up; otherwise leave "loading-three"
+      if (st.threeReady) setStatus("ready");
     }
-  }, [file]);
+  }, [file, loadModelInner]);
 
-  // Wireframe toggle
+  // ── 4. Wireframe toggle ────────────────────────────────────────────────
   useEffect(() => {
     const st = stateRef.current;
     if (st.model) applyWireframe(st.model, wireframe);
   }, [wireframe]);
 
-  // Mouse controls
+  // ── 5. Orbit controls (mouse) ──────────────────────────────────────────
   useEffect(() => {
-    const el = mountRef.current; if (!el) return;
+    const el = mountRef.current;
+    if (!el) return;
     const st = stateRef.current;
+
     const onDown = (e: MouseEvent) => { st.drag=true; st.lastX=e.clientX; st.lastY=e.clientY; };
     const onMove = (e: MouseEvent) => {
       if (!st.drag || !st.model) return;
-      const dx = e.clientX-st.lastX, dy = e.clientY-st.lastY;
-      st.rotY += dx*0.008; st.rotX += dy*0.008;
-      st.lastX=e.clientX; st.lastY=e.clientY;
-      st.model.rotation.y=st.rotY; st.model.rotation.x=st.rotX;
+      const dx = e.clientX - st.lastX, dy = e.clientY - st.lastY;
+      st.rotY += dx * 0.008;
+      st.rotX += dy * 0.008;
+      st.lastX = e.clientX; st.lastY = e.clientY;
+      st.model.rotation.y = st.rotY;
+      st.model.rotation.x = st.rotX;
     };
-    const onUp = () => { st.drag=false; };
+    const onUp = () => { st.drag = false; };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      if (st.camera) st.camera.position.z = Math.max(0.3, Math.min(30, st.camera.position.z + e.deltaY*0.008));
+      if (st.camera) {
+        st.camera.position.z = Math.max(0.3, Math.min(30, st.camera.position.z + e.deltaY * 0.008));
+      }
     };
+
     el.addEventListener("mousedown", onDown);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    el.addEventListener("wheel", onWheel, { passive:false });
+    el.addEventListener("wheel", onWheel, { passive: false });
+
     return () => {
       el.removeEventListener("mousedown", onDown);
       window.removeEventListener("mousemove", onMove);
@@ -274,35 +627,38 @@ function ThreeViewer({ file, wireframe }: { file: File|null; wireframe: boolean 
     };
   }, []);
 
+  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="relative w-full h-full bg-[#0d1117]">
-      <div ref={mountRef} className="w-full h-full" style={{ cursor:"grab" }}/>
-      {status==="loading-three" && (
+      <div ref={mountRef} className="w-full h-full" style={{ cursor: "grab" }}/>
+
+      {status === "loading-three" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <div className="w-7 h-7 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"/>
-          <span className="text-white/30 text-xs">Initializing renderer…</span>
+          <span className="text-white/30 text-xs">Initialising renderer…</span>
         </div>
       )}
-      {status==="loading-model" && (
+      {status === "loading-model" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0d1117]/70">
           <div className="w-7 h-7 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"/>
           <span className="text-white/50 text-sm">Loading model…</span>
         </div>
       )}
-      {status==="error" && (
+      {status === "error" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-6">
           <span className="text-2xl">⚠️</span>
-          <p className="text-white/40 text-xs">{errMsg}</p>
+          <p className="text-white/50 text-sm font-medium">Could not load model</p>
+          <p className="text-white/30 text-xs">{errMsg}</p>
         </div>
       )}
-      {(status==="ready" || status==="idle") && !file && (
+      {(status === "ready" || status === "idle") && !file && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
           <div className="w-16 h-16 rounded-2xl border border-white/[0.06] flex items-center justify-center text-3xl">🧊</div>
           <p className="text-white/25 text-sm">Drop a GLB or GLTF file</p>
           <p className="text-white/15 text-xs">Drag · Scroll to zoom</p>
         </div>
       )}
-      {file && status==="ready" && (
+      {file && status === "ready" && (
         <div className="absolute bottom-2 left-3 text-[10px] font-mono text-white/20 pointer-events-none select-none">
           drag to rotate · scroll to zoom
         </div>
@@ -318,162 +674,6 @@ function applyWireframe(model: any, on: boolean) {
       mats.forEach((m: any) => { m.wireframe = on; });
     }
   });
-}
-
-// ─── Minimal GLB/GLTF parser ──────────────────────────────────────────────────
-async function parseGLTF(T: any, buffer: ArrayBuffer, _url: string): Promise<any> {
-  const view = new DataView(buffer);
-  const magic = view.getUint32(0, true);
-
-  let json: any, binChunk: ArrayBuffer|null = null;
-
-  if (magic === 0x46546C67) {
-    // GLB
-    const chunk0Len = view.getUint32(12, true);
-    const jsonBytes = new Uint8Array(buffer, 20, chunk0Len);
-    json = JSON.parse(new TextDecoder().decode(jsonBytes));
-    const ch1Off = 20 + chunk0Len;
-    if (ch1Off + 8 <= buffer.byteLength) {
-      const ch1Len = view.getUint32(ch1Off, true);
-      const ch1Type = view.getUint32(ch1Off+4, true);
-      if (ch1Type === 0x004E4942) binChunk = buffer.slice(ch1Off+8, ch1Off+8+ch1Len);
-    }
-  } else {
-    json = JSON.parse(new TextDecoder().decode(buffer));
-  }
-
-  return buildScene(T, json, binChunk);
-}
-
-function getTypedData(json: any, bin: ArrayBuffer|null, idx: number): any {
-  const acc = json.accessors[idx];
-  const bv = json.bufferViews[acc.bufferView ?? 0];
-  const compTypes: Record<number,any> = { 5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array };
-  const typeSz: Record<string,number> = { SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT2:4,MAT3:9,MAT4:16 };
-  const CT = compTypes[acc.componentType]||Float32Array;
-  const nc = typeSz[acc.type]||1;
-  const off = (bv.byteOffset||0)+(acc.byteOffset||0);
-  const buf = json.buffers?.[bv.buffer]?.uri ? null : bin;
-  if (!buf) return null;
-  return new CT(buf, off, acc.count*nc);
-}
-
-function buildScene(T: any, json: any, bin: ArrayBuffer|null): any {
-  const root = new T.Group();
-  const sceneIdx = json.scene??0;
-  const sceneData = json.scenes?.[sceneIdx];
-  const nodeIdxs: number[] = sceneData?.nodes ?? (json.nodes?.map((_:any,i:number)=>i) ?? []);
-
-  const buildNode = (ni: number, parent: any) => {
-    const nd = json.nodes?.[ni]; if (!nd) return;
-    const obj = new T.Group(); obj.name = nd.name||`n${ni}`;
-    if (nd.matrix) { obj.matrix.fromArray(nd.matrix); obj.matrix.decompose(obj.position,obj.quaternion,obj.scale); }
-    else {
-      if (nd.translation) obj.position.fromArray(nd.translation);
-      if (nd.rotation) obj.quaternion.fromArray(nd.rotation);
-      if (nd.scale) obj.scale.fromArray(nd.scale);
-    }
-    if (nd.mesh !== undefined) {
-      const mdata = json.meshes?.[nd.mesh];
-      mdata?.primitives?.forEach((prim: any) => {
-        try {
-          const geo = new T.BufferGeometry();
-          if (prim.attributes?.POSITION != null) {
-            const d = getTypedData(json, bin, prim.attributes.POSITION);
-            if (d) geo.setAttribute("position", new T.BufferAttribute(new Float32Array(d), 3));
-          }
-          if (prim.attributes?.NORMAL != null) {
-            const d = getTypedData(json, bin, prim.attributes.NORMAL);
-            if (d) geo.setAttribute("normal", new T.BufferAttribute(new Float32Array(d), 3));
-          }
-          if (prim.attributes?.TEXCOORD_0 != null) {
-            const d = getTypedData(json, bin, prim.attributes.TEXCOORD_0);
-            if (d) geo.setAttribute("uv", new T.BufferAttribute(new Float32Array(d), 2));
-          }
-          if (prim.indices != null) {
-            const d = getTypedData(json, bin, prim.indices);
-            if (d) geo.setIndex(new T.BufferAttribute(d instanceof Uint32Array ? d : new Uint32Array(d), 1));
-          }
-          if (!geo.attributes.normal && geo.attributes.position) geo.computeVertexNormals();
-          const mat = buildMat(T, json, bin, prim.material);
-          obj.add(new T.Mesh(geo, mat));
-        } catch {}
-      });
-    }
-    parent.add(obj);
-    nd.children?.forEach((ci: number) => buildNode(ci, obj));
-  };
-
-  nodeIdxs.forEach(ni => buildNode(ni, root));
-  return { scene: root, animations: [] };
-}
-
-function buildMat(T: any, json: any, bin: ArrayBuffer|null, matIdx: number|undefined): any {
-  if (matIdx == null || !json.materials?.[matIdx]) {
-    return new T.MeshStandardMaterial({ color:0xcccccc, metalness:0.05, roughness:0.8 });
-  }
-  const m = json.materials[matIdx];
-  const pbr = m.pbrMetallicRoughness||{};
-  const params: any = {
-    metalness: pbr.metallicFactor??0,
-    roughness: pbr.roughnessFactor??1,
-    side: m.doubleSided ? T.DoubleSide : T.FrontSide,
-    name: m.name||"",
-  };
-  if (pbr.baseColorFactor) {
-    const [r,g,b] = pbr.baseColorFactor;
-    params.color = new T.Color(r,g,b);
-  }
-  // Try to load embedded texture
-  if (pbr.baseColorTexture != null && json.textures && bin) {
-    try {
-      const texSrc = json.textures[pbr.baseColorTexture.index]?.source;
-      if (texSrc != null && json.images?.[texSrc]) {
-        const img = json.images[texSrc];
-        if (img.bufferView != null) {
-          const bv = json.bufferViews[img.bufferView];
-          const bytes = new Uint8Array(bin, bv.byteOffset||0, bv.byteLength);
-          const blob = new Blob([bytes], { type: img.mimeType||"image/jpeg" });
-          const imgUrl = URL.createObjectURL(blob);
-          const tex = new T.TextureLoader().load(imgUrl, ()=>URL.revokeObjectURL(imgUrl));
-          tex.encoding = T.sRGBEncoding;
-          tex.flipY = false;
-          params.map = tex;
-        }
-      }
-    } catch {}
-  }
-  // Metallic-roughness texture
-  if (pbr.metallicRoughnessTexture != null && json.textures && bin) {
-    try {
-      const texSrc = json.textures[pbr.metallicRoughnessTexture.index]?.source;
-      if (texSrc != null && json.images?.[texSrc]?.bufferView != null) {
-        const bv = json.bufferViews[json.images[texSrc].bufferView];
-        const bytes = new Uint8Array(bin, bv.byteOffset||0, bv.byteLength);
-        const blob = new Blob([bytes], { type: json.images[texSrc].mimeType||"image/jpeg" });
-        const imgUrl = URL.createObjectURL(blob);
-        const tex = new T.TextureLoader().load(imgUrl, ()=>URL.revokeObjectURL(imgUrl));
-        tex.encoding = T.LinearEncoding; tex.flipY = false;
-        params.metalnessMap = tex; params.roughnessMap = tex;
-      }
-    } catch {}
-  }
-  // Normal map
-  if (m.normalTexture != null && json.textures && bin) {
-    try {
-      const texSrc = json.textures[m.normalTexture.index]?.source;
-      if (texSrc != null && json.images?.[texSrc]?.bufferView != null) {
-        const bv = json.bufferViews[json.images[texSrc].bufferView];
-        const bytes = new Uint8Array(bin, bv.byteOffset||0, bv.byteLength);
-        const blob = new Blob([bytes], { type: json.images[texSrc].mimeType||"image/jpeg" });
-        const imgUrl = URL.createObjectURL(blob);
-        const tex = new T.TextureLoader().load(imgUrl, ()=>URL.revokeObjectURL(imgUrl));
-        tex.encoding = T.LinearEncoding; tex.flipY = false;
-        params.normalMap = tex;
-      }
-    } catch {}
-  }
-  return new T.MeshStandardMaterial(params);
 }
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
@@ -527,7 +727,7 @@ export default function GLBGLTFCompressor() {
       "Writing output buffer…","Finalizing…",
     ].filter(Boolean) as string[];
     const t0 = Date.now();
-    for (let i=0; i<steps.length; i++) {
+    for (let i=0;i<steps.length;i++) {
       setProgressLabel(steps[i]);
       await new Promise(r=>setTimeout(r, 180+Math.random()*320));
       setProgress(Math.round(((i+1)/steps.length)*100));
@@ -595,7 +795,7 @@ export default function GLBGLTFCompressor() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-5">
           {/* LEFT: Viewport */}
           <div className="space-y-3">
-            <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{height:"520px"}}>
+            <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{height:"600px"}}>
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.02]">
                 <div className="flex items-center gap-3">
                   <span className="text-[10px] font-medium text-white/35 uppercase tracking-widest">Viewport</span>
