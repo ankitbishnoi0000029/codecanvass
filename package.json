@@ -59,6 +59,7 @@
     "onnxruntime-web": "1.21.0",
     "pako": "^2.1.0",
     "papaparse": "^5.5.3",
+    "pdf-lib": "^1.17.1",
     "prettier": "^3.8.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
