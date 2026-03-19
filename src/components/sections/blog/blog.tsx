@@ -145,7 +145,8 @@ function PostCard({ post }: { post: Post }) {
         <div className="flex items-center gap-3 text-xs text-zinc-400">
 
           <Link
-            href={`/blog?category=${post.category.slug}`}
+            // href={`/blog?category=${post.category.slug}`}
+            href={'/'}
             className="text-cyan-400 uppercase"
           >
             {post.category.name}
