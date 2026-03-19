@@ -20,7 +20,7 @@ export function Navbar() {
     { name: 'Compress Hub', href: '/compress' },
     // { name: 'JSON Formatter', href: '/json-formatter' },
     // { name: 'XML Formatter', href: '/xml-formatter' },
-    { name: 'Generator QR', href: '/qr-generator' }, // ✅ fixed
+    { name: 'Generator QR', href: '/qrGenerator' }, // ✅ fixed
     { name: 'Remove Background', href: '/bg-remove' },
     { name: 'Blog', href: '/blog' },
   ];
@@ -60,7 +60,7 @@ export function Navbar() {
             {/* SPECIAL LINK */}
             <div className="hidden lg:flex items-center xl:gap-8 px-3 py-1 rounded-md bg-black text-white">
               <Link
-                href="/chat-gpt" // ✅ fixed lowercase
+                href="/chat-GPT" // ✅ fixed lowercase
                 className="font-medium hover:border-b-2 border-purple-600"
               >
                 ChatGPT

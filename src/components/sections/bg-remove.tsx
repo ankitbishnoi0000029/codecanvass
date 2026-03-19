@@ -156,7 +156,7 @@ export default function BGRemover() {
       <div className="min-h-screen bg-gray-50 text-gray-800 font-['Inter',sans-serif]">
         <div className="text-center pt-12 pb-8 px-4">
           <div className="w-16 h-16 mx-auto bg-white border border-gray-200 rounded-2xl shadow-md flex items-center justify-center mb-6 overflow-hidden">
-            <Image src="/image/bg.png" width={72} height={72} alt="logo" />
+            {/* <Image src="/image/bg.png" width={72} height={72} alt="logo" /> */}
           </div>
           <h1 className="font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-gray-900">
             Remove backgrounds

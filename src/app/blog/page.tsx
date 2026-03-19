@@ -1,3 +1,4 @@
+
 import BlogPage from "@/components/sections/blog/blog";
 import type { Metadata } from "next";
 
