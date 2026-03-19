@@ -735,11 +735,11 @@ export const GUIDES = {
       title: 'Developer Tools',
       links: [
         { name: 'IP Tools', href: '/' },
-        { name: 'Formatters & Beautifiers', href: '/json-formatter' },
+        // { name: 'Formatters & Beautifiers', href: '/json-formatter' },
         { name: 'Image Converter Tools', href: '/image-tools/jpg-to-png' },
         { name: 'Finance Tools', href: '/' },
         { name: 'TSV Tools', href: '/json-converters/json-to-tsv' },
-        { name: 'JSON Tools', href: '/json-formatter' },
+        // { name: 'JSON Tools', href: '/json-formatter' },
         { name: 'XML Tools', href: '/xml-formatter' },
         { name: 'YAML Tools', href: '/yaml-converters/yaml-to-json' },
         { name: 'HTML Tools', href: '/html-converters/html-stripper' },
