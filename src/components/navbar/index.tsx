@@ -18,7 +18,7 @@ export function Navbar() {
     { name: 'Compress Hub', href: '/compress' },
     { name: 'JSON Formatter', href: '/json-formatter' },
     { name: 'XML Formatter', href: '/xml-formatter' },
-    { name: 'Generator QR', href: '/qrGenerator' },
+    // { name: 'Generator QR', href: '/qrGenerator' },
     { name: 'Remove Background', href: '/bg-remove' },
     // { name: 'Share File', href: '/sharefile' },
     // { name: 'Video Downloader', href: '/videodownloder' },
