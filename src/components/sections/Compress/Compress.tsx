@@ -149,7 +149,12 @@ const CATEGORIES = [
   },
 ];
 
-type Tool     = (typeof CATEGORIES)[0]['tools'][0] & { categoryId?: string };
+type Tool     = (typeof CATEGORIES)[0]['tools'][0] & {
+  categoryId?: string;
+  popular?: boolean;
+  isNew?: boolean;
+  badge?: string;
+};
 type Category = (typeof CATEGORIES)[0];
 type Result   = { originalSize: number; compressedSize: number; ratio: number; url: string; downloadName: string; method: string };
 

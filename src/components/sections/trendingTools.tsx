@@ -7,15 +7,10 @@ import { TrendingUp } from "lucide-react";
 import { dataType } from "@/utils/types/uiTypes";
 import Link from "next/link";
 
-export function TrendingTools() {
-  const [data, setData] = useState<dataType[]>([]);
+export function TrendingTools({tools} : {tools: dataType[]}) {
+  const [data, setData] = useState<dataType[]>(tools);
 
-  useEffect(() => {
-    (async () => {
-      const res = (await getTableData("trendingtools")) as unknown as dataType[];
-      setData(Array.isArray(res) ? res : []);
-    })();
-  }, []);
+
 
   return (
     <section className="relative py-16 px-6 my-6 ">

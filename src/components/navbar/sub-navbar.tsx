@@ -20,30 +20,17 @@ interface MergedCategory extends Category {
   subcategories: Subcategory[];
 }
 
-export function SubNavbar() {
+export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[] } ) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | number | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubCategories] = useState<Subcategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>(cate);
+  const [subcategories, setSubCategories] = useState<Subcategory[]>(sub);
   const [dropdownStyle, setDropdownStyle] = useState<{ left?: string; right?: string; transform?: string }>({});
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const itemRefs = useRef<{ [key: string | number]: HTMLLIElement | null }>({});
 
-  const fetchData = async () => {
-    try {
-      const categoriesResponse = (await getTableData("categories")) as Category[];
-      const subcategoriesResponse = (await getTableData("subcategories")) as Subcategory[];
-      setCategories(categoriesResponse);
-      setSubCategories(subcategoriesResponse);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 30);

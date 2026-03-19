@@ -7,16 +7,11 @@ import { dataType } from "@/utils/types/uiTypes";
 import { ArrowUpRight, Sparkles, Zap, Code2 } from "lucide-react";
 import Link from "next/link";
 
-export function Popular() {
+export function Popular({ tools }: { tools: dataType[] }) {
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [data, setData] = useState<dataType[]>([]);
+  const [data, setData] = useState<dataType[]>(tools);
 
-  useEffect(() => {
-    (async () => {
-      const res = (await getTableData("popular")) as unknown as dataType[];
-      setData(Array.isArray(res) ? res : []);
-    })();
-  }, []);
+  
   // Function to get random gradient for each card
   const getGradientByIndex = (index: number) => {
     const gradients = [

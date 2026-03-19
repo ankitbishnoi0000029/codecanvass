@@ -5,8 +5,13 @@ import jwt from "jsonwebtoken"
 import { cookies } from 'next/headers';
 
 export async function getTableData(table) {
-  const [rows] = await ddb.query(`SELECT * FROM  ${table}`);
-  return rows;
+  try {
+    const [rows] = await ddb.query('SELECT * FROM ??', [table]);
+    return rows;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 }
 
 export async function getNavbar(route) {
