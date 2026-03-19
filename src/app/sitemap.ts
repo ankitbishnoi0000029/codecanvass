@@ -7,9 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '',
     '/json-formatter',
     '/xml-formatter',
-    '/qrGenerator',
     '/backgroundremover',
-    '/sharefile',
     '/videodownloder',
     '/blog',
 

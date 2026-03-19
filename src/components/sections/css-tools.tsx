@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, Palette, Sparkles } from "lucide-react";
 
 import { css as cssBeautify } from "js-beautify";
-import less from "less";
+import * as less from "less";
 import * as sass from "sass";
 
 // ⭐ FIX: Stylus dynamically imported to avoid build issues

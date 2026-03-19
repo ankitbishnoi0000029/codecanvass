@@ -16,14 +16,7 @@ export default function NotFound() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (countdown <= 0) {
-      router.push("/");
-      return;
-    }
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown, router]);
+  
 
   const progress = ((5 - countdown) / 5) * 100;
 

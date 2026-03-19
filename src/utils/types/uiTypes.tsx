@@ -19,7 +19,7 @@ export interface dataType {
   des: string;
   keyword: string;
   metadata?: string;
-  route?: string;
+  route: string;
   icon?: string;
 }
 
