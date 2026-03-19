@@ -120,11 +120,11 @@ export default function WelcomePage() {
               <ArrowBigDown className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
 
-            <Link href={"/json-formatter"} className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+            {/* <Link href={"/json-formatter"} className="group px-6 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
               <Zap className="w-5 h-5" />
               Try JSON Formatter
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            </Link> */}
 
             <Link href={"/tools"} className="group px-6 py-3 bg-gradient-to-r from-blue-600 via-gray-900 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
               <Zap className="w-5 h-5" />

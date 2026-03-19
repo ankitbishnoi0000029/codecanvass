@@ -675,7 +675,7 @@ export const GUIDES = {
     {
       title: 'Popular Functionality',
       links: [
-        { name: 'JSON Beautifier', href: '/json-formatter' },
+        // { name: 'JSON Beautifier', href: '/json-formatter' },
         { name: 'HTML Viewer', href: '/html-converters/html-stripper' },
         { name: 'Number to Words', href: '/popular/number-to-words' },
         { name: 'SQL Formatter', href: '/sql-converters/sql-to-csv' },
@@ -684,8 +684,8 @@ export const GUIDES = {
         { name: 'HEX to Pantone', href: '/popular/hex-to-pantone' },
         { name: 'Source Code Viewer', href: '/popular/source-code-viewer' },
         { name: 'Binary to Text', href: '/encode-decode/base64-decode' },
-        { name: 'JSON Viewer', href: '/json-formatter' },
-        { name: 'JSON Validator', href: '/json-formatter' },
+        // { name: 'JSON Viewer', href: '/json-formatter' },
+        // { name: 'JSON Validator', href: '/json-formatter' },
         { name: 'Base64 Decode', href: '/encode-decode/base64-decode' },
         { name: 'Hex to Decimal', href: '/popular/hex-to-decimal' },
         { name: 'XML Viewer', href: '/xml-converters/xml-viewer' },
@@ -696,7 +696,7 @@ export const GUIDES = {
         { name: 'XML Validator', href: '/xml-formatter' },
         { name: 'JavaScript Validator', href: '/popular/javascript-validator' },
         { name: 'CSS Beautifier', href: '/popular/css-beautifier' },
-        { name: 'ONLINE JSON EDITOR', href: '/json-formatter' },
+        // { name: 'ONLINE JSON EDITOR', href: '/json-formatter' },
         { name: 'Decimal to Hex', href: '/popular/decimal-to-hex' },
         { name: 'Binary to Decimal', href: '/popular/binary-to-decimal' },
         { name: 'ASCII to Text', href: '/encode-decode/base64-decode' },

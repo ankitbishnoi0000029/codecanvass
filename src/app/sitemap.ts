@@ -5,7 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const routes = [
     '',
-    '/json-formatter',
+    // '/json-formatter',
     '/xml-formatter',
     '/backgroundremover',
     '/videodownloder',
