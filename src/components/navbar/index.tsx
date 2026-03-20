@@ -18,9 +18,9 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Compress Hub', href: '/compress' },
-    // { name: 'JSON Formatter', href: '/json-formatter' },
-    // { name: 'XML Formatter', href: '/xml-formatter' },
-    // { name: 'Generator QR', href: '/qrGenerator' }, // ✅ fixed
+    { name: 'JSON Formatter', href: '/json-formatter' },
+    { name: 'XML Formatter', href: '/xml-formatter' },
+    { name: 'Generator QR', href: '/qr-generator' }, // ✅ fixed
     { name: 'Remove Background', href: '/bg-remove' },
     { name: 'Blog', href: '/blog' },
   ];

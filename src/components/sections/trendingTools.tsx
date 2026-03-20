@@ -7,10 +7,8 @@ import { TrendingUp } from "lucide-react";
 import { dataType } from "@/utils/types/uiTypes";
 import Link from "next/link";
 
-export function TrendingTools({tools} : {tools: dataType[]}) {
+export function TrendingTools({ tools }: { tools: dataType[] }) {
   const [data, setData] = useState<dataType[]>(tools);
-
-
 
   return (
     <section className="relative py-16 px-6 my-6 ">
@@ -30,8 +28,7 @@ export function TrendingTools({tools} : {tools: dataType[]}) {
           {data.map((tool) => (
             <Link
               key={tool.id}
-              href={`trendingtool/${tool.route} || ''`}
-              // onClick={() => router.push(`/${tool.route}`)}
+              href={`/trendingtool/${tool.route}`}  // ✅ Fixed: removed fallback, added leading slash
               className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] focus:outline-none"
             >
               {/* Accent line */}

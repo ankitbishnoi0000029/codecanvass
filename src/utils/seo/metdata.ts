@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { getMeta } from "@/actions/dbAction";
-import { console } from "inspector";
 
 const SITE_NAME = "AI Online Tools";
-export const SITE_URL = "https://aionlinetoolss.com/";
+export const SITE_URL = "https://aionlinetoolss.com";
 
 interface GenerateMetaOptions {
-  table:                string;
-  urlId:                string;
-  route:                string;
-  fallbackTitle?:       string;
+  table: string;
+  urlId: string;
+  route: string;
+  fallbackTitle?: string;
   fallbackDescription?: string;
-  fallbackKeywords?:    string;
+  fallbackKeywords?: string;
 }
 
 /** Safely parse any raw DB value into a flat key-value object */
@@ -34,41 +33,45 @@ export const buildMetadata = async ({
   table,
   urlId,
   route,
-  fallbackTitle       = "Online Tool",
+  fallbackTitle = "Online Tool",
   fallbackDescription = "Explore our powerful free online tools.",
-  fallbackKeywords    = "online tools, utilities, converter",
+  fallbackKeywords = "online tools, utilities, converter",
 }: GenerateMetaOptions): Promise<Metadata> => {
-
-  let raw;
+  let data;
   try {
-    raw = await getMeta(table, urlId);
+    data = await getMeta(table, urlId);
+    // console.log(`Fetched data for ${table}/${urlId}:`, data);
   } catch (error) {
     console.warn(`Failed to fetch metadata for ${table}/${urlId}:`, error);
-    raw = null;
+    data = { metadata: null, dbSlug: null };
   }
-  const meta = parseMeta(raw);
+
+  const meta = parseMeta(data.metadata);
+  const dbSlug = data.dbSlug; // from the database column
+
   /* ── core values with defaults ── */
-  const title       = get(meta, "title")       ?? fallbackTitle;
+  const title = get(meta, "title") ?? fallbackTitle;
   const description = get(meta, "description") ?? fallbackDescription;
-  const keywords    = get(meta, "keywords")    ?? fallbackKeywords;
-  const canonical   = `${SITE_URL}/${route}`;
+  const keywords = get(meta, "keywords") ?? fallbackKeywords;
+const robots  = get(meta, "robots") ?? "index, follow"; // default to allowing indexing
+  /* ── URL slug: prefer metadata.urlSlug, then db slug, then route ── */
+  const urlSlug =  dbSlug ;
+  const canonical = urlSlug ? `${SITE_URL}/${urlSlug}/${route}` : `${SITE_URL}${route}`;
+
 
   /* ── OG ── */
-  const ogTitle       = get(meta, "ogTitle")       ?? title;
+  const ogTitle = get(meta, "ogTitle") ?? title;
   const ogDescription = get(meta, "ogDescription") ?? description;
-  const ogImage       = get(meta, "ogImage");
-  const ogUrl         = get(meta, "ogUrl")         ?? canonical;
-  const ogType        = get(meta, "ogType")        ?? "website";
+  const ogImage = get(meta, "ogImage");
+  const ogUrl = get(meta, "ogUrl") ?? canonical;
+  const ogType = get(meta, "ogType") ?? "website";
 
   /* ── Image ── */
-  const imageAlt      = get(meta, "imageAlt")      ?? title;
+  const imageAlt = get(meta, "imageAlt") ?? title;
   const imageFileName = get(meta, "imageFileName");
 
-  /* ── URL ── */
-  const urlSlug       = get(meta, "urlSlug")       ?? route;
-
   /* ── Page Content ── */
-  const pageContent   = get(meta, "pageContent");
+  const pageContent = get(meta, "pageContent");
 
   /* ── Collect any EXTRA / unknown fields that exist in meta ──
      so future fields added in DB are never silently dropped    */
@@ -88,16 +91,16 @@ export const buildMetadata = async ({
 
   /* ── Build final Metadata object ── */
   return {
-    title:       `${title} | ${SITE_NAME}`,
+    title: `${title} | ${SITE_NAME}`,
     description,
     keywords,
-
+robots,
     openGraph: {
-      title:       `${ogTitle} | ${SITE_NAME}`,
+      title: `${ogTitle} | ${SITE_NAME}`,
       description: ogDescription,
-      url:         ogUrl,
-      type:        ogType as any,
-      siteName:    SITE_NAME,
+      url: ogUrl,
+      type: ogType as any,
+      siteName: SITE_NAME,
       ...(ogImage && {
         images: [{
           url: ogImage,
@@ -107,8 +110,8 @@ export const buildMetadata = async ({
     },
 
     twitter: {
-      card:        "summary_large_image",
-      title:       `${ogTitle} | ${SITE_NAME}`,
+      card: "summary_large_image",
+      title: `${ogTitle} | ${SITE_NAME}`,
       description: ogDescription,
       ...(ogImage && { images: [ogImage] }),
     },
@@ -118,17 +121,10 @@ export const buildMetadata = async ({
     },
 
     other: {
-      /* canonical slug */
-      "url-slug":         urlSlug,
-
-      /* image info */
-      "image-alt":        imageAlt,
+      "url-slug": urlSlug,
+      "image-alt": imageAlt,
       ...(imageFileName && { "image-file-name": imageFileName }),
-
-      /* page content as meta if exists */
       ...(pageContent && { "page-content": pageContent }),
-
-      /* any unknown extra fields from DB */
       ...extraOther,
     },
   };

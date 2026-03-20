@@ -9,6 +9,8 @@ interface PageProps {
 }
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { page } = await params;
+  
+ 
   return buildMetadata({
     table: "encode_decode",
     urlId: page,

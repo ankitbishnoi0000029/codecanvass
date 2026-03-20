@@ -375,7 +375,7 @@ export const category = [
     ]
   },
   {
-    name: 'encode-&-decode', href: '/encode-&-decode',
+    name: 'encode-&-decode',
     subcategories: [
       { name: 'Base32 Encode', to: 'encode-&-decode/base32-encode' },
       { name: 'Base32 Decode', to: 'encode-&-decode/base32-decode' },

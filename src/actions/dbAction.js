@@ -29,9 +29,15 @@ export async function getNavbar(route) {
 }
 
 export async function getMeta(table, route) {
-  const [rows] = await ddb.query(`SELECT metadata FROM ?? WHERE route = ? LIMIT 1`, [table, route]);
-  console.log("table:", table, "route:", route, "metadata:", rows[0]?.metadata);
-  return rows[0]?.metadata || null;
+  const [rows] = await ddb.query(`SELECT metadata , slug FROM ?? WHERE route = ? LIMIT 1`, [table, route]);
+  console.log("metadata:", rows[0]?.metadata);
+  const meta = rows[0]?.metadata;
+  const dbSlug = rows[0]?.slug;
+  console.log("dbSlug:", dbSlug);
+  return {
+    metadata: meta,
+    dbSlug: dbSlug
+  }
 }
 export async function addNewRecord(data) {
   try {
