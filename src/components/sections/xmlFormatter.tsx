@@ -322,7 +322,9 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-400 via-teal-500 to-cyan-600">
-      <main className="max-w-[1600px] mx-auto p-4">
+      <div className="max-w-[1600px] mx-auto p-4">
+          <h1 className="text-4xl font-bold text-center text-white mb-8">XML Formatter & Converter</h1>
+          <h2 className="text-center text-white mb-12 text-lg">Instantly format, validate, and convert your XML data with ease!</h2>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-120px)]">
           <div className="lg:col-span-5 bg-white rounded-lg shadow-xl flex flex-col h-full">
             <div className="bg-slate-700 px-4 py-2 flex items-center gap-2 rounded-t-lg flex-shrink-0">
@@ -471,7 +473,7 @@ useEffect(() => {
         <div className="mt-8 text-center text-gray-600 text-sm">
         <Meta selectedData={list} />
       </div>
-      </main>
+      </div>
     </div>
   );
 }

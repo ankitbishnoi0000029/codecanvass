@@ -42,11 +42,9 @@ export function Popular({ tools }: { tools: dataType[] }) {
             <span>Most Popular Tools</span>
           </div>
 
-          <Heading
-            title="Powerful Utilities at Your Fingertips"
-            align="center"
+          <h2
             className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent"
-          />
+          >Powerful Utilities at Your Fingertips</h2>
 
           <p className="mt-4 text-lg text-gray-600 max-w-2xl">
             Discover our most loved tools that developers and creators use every day to boost their productivity.

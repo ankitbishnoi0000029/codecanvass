@@ -17,7 +17,7 @@ export function TrendingTools({ tools }: { tools: dataType[] }) {
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
-          <Heading title="Trending Tools" align="left" />
+          <h2 title="Trending Tools" className="font-bold text-3xl " >Trending Tools</h2>
           <p className="mt-2 text-sm text-slate-500">
             Tools people are actively using right now
           </p>

@@ -132,16 +132,16 @@ export function SidebarContentWrapper({
 }: SidebarContentProps) {
   return (
     <div className={`flex w-full pt-6 flex-col ${className}`}>
-      <header className="flex h-16 items-center gap-2 border-b px-4">
+      <div className="flex h-16 items-center gap-2 border-b px-4">
         <SidebarTrigger />
         <h1 className="text-lg font-bold uppercase">
           {selectedOption?.label || selectedOption?.urlName}
         </h1>
-      </header>
+      </div>
       
-      <main className="flex-1 p-6">
+      <div className="flex-1 p-6">
         {children}
-      </main>
+      </div>
     </div>
   )
 }
