@@ -4,7 +4,9 @@ import { Popular } from '@/components/sections/popular';
 import { TrendingTools } from '@/components/sections/trendingTools';
 import WelcomePage from '@/components/ui/welcome-Page';
 import type { Metadata } from 'next';
-
+import type { dataType } from '@/utils/types/uiTypes';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
 
@@ -104,8 +106,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const res = await getTableData('popular');
-  const resp = await getTableData('trendingtools');
+  const res = await getTableData('popular') as dataType[];
+  const resp = await getTableData('trendingtools') as dataType[];
   return (
     <main className="container mx-auto">
       <WelcomePage />

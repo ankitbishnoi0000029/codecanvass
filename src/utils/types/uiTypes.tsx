@@ -60,3 +60,15 @@ export interface CategoryItem {
   name: string;
   // icon: LucideIcon;
 }
+
+export interface Category {
+  id: string | number;
+  name: string;
+}
+
+export interface Subcategory {
+  id: string | number;
+  route: string;
+  name: string;
+  category_id: string | number;
+}

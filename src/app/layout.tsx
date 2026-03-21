@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { SubNavbar } from '@/components/navbar/sub-navbar';
 import { getTableData } from '@/actions/dbAction';
+import { Category, Subcategory } from '@/utils/types/uiTypes';
 // ❌ REMOVE this if not needed
 // import { categories } from '@/utils/consitants/consitaint';
 
@@ -33,8 +34,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // ✅ Rename variables to avoid conflict
-  const categoriesData = await getTableData("categories");
-  const subcategoriesData = await getTableData("subcategories");
+  const categoriesData = await getTableData("categories") as unknown as Category[];
+  const subcategoriesData = await getTableData("subcategories") as unknown as Subcategory[];
 
   return (
     <html lang="en" suppressHydrationWarning>

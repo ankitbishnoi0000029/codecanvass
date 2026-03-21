@@ -131,7 +131,7 @@ export default function WelcomePage() {
               Flag Maker
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href={"/GLB-GLTF-compress"} className="group px-6 py-3 bg-gradient-to-r from-red-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+            <Link href={"/gbl-gltf-compress"} className="group px-6 py-3 bg-gradient-to-r from-red-600 to-red-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
               <Zap className="w-5 h-5" />
               GLB-GLTF Viewer & Compressor
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

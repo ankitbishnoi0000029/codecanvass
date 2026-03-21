@@ -60,7 +60,7 @@ export function Navbar() {
             {/* SPECIAL LINK */}
             <div className="hidden lg:flex items-center xl:gap-8 px-3 py-1 rounded-md bg-black text-white">
               <Link
-                href="/chat-GPT" // ✅ fixed lowercase
+                href="/chat-gpt" // ✅ fixed lowercase
                 className="font-medium hover:border-b-2 border-purple-600"
               >
                 ChatGPT
