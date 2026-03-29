@@ -20,7 +20,11 @@ export interface dataType {
   keyword: string;
   metadata?: string;
   route: string;
+  FAQ?: string;
   icon?: string;
+  bottom_des?: string;
+  code?: string;
+  content?: string;
 }
 
 export interface fromDataType {
@@ -32,9 +36,9 @@ export interface fromDataType {
   keyword: string;
   category?: string;
   metaData?: string;
+  FAQ?: string;
   route?: string;
   url?: string;
-
 }
 
 export interface MetaData {

@@ -56,7 +56,7 @@ export function Footer() {
               <Link
                 href="/"
                 className="flex items-center space-x-3 group w-fit"
-                aria-label="CodeBeauty - Home"
+                aria-label="AI ONLINE TOOLS - Home"
               >
                 <div className="relative w-11 h-11 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:shadow-xl group-hover:shadow-purple-500/50 transition-all duration-300 group-hover:scale-110">
                   <Sparkles className="w-6 h-6 text-white" strokeWidth={2.5} />

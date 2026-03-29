@@ -10,13 +10,16 @@ import {
   Share2,
   Image,
   Link2,
+  Edit3Icon,
 } from 'lucide-react';
 import Link from 'next/link';
+import FAQList from './faqSection';
 
 interface AdminListProps {
   data: fromDataType[];
   fetching: boolean;
   onEdit: (tool: fromDataType) => void;
+  onContentEdit: (tool: fromDataType) => void;
   onDelete: (id: string, table: string) => void;
 }
 
@@ -37,13 +40,15 @@ interface ParsedMeta {
 
 const Badge = ({ children, color = 'blue' }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
-    blue:   'bg-blue-50   text-blue-600   dark:bg-blue-950  dark:text-blue-400',
-    green:  'bg-green-50  text-green-600  dark:bg-green-950 dark:text-green-400',
+    blue: 'bg-blue-50   text-blue-600   dark:bg-blue-950  dark:text-blue-400',
+    green: 'bg-green-50  text-green-600  dark:bg-green-950 dark:text-green-400',
     purple: 'bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400',
-    slate:  'bg-slate-100 text-slate-600  dark:bg-slate-800 dark:text-slate-400',
+    slate: 'bg-slate-100 text-slate-600  dark:bg-slate-800 dark:text-slate-400',
   };
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[color] ?? colors.blue}`}>
+    <span
+      className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[color] ?? colors.blue}`}
+    >
       {children}
     </span>
   );
@@ -70,11 +75,16 @@ const MetaRow = ({
   );
 };
 
-export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) => {
+export const AdminList = ({ data, fetching, onContentEdit, onEdit, onDelete }: AdminListProps) => {
+  // console.log('AdminList data:', data);
   const getMeta = (metaData?: string | any): ParsedMeta | null => {
     if (!metaData) return null;
     if (typeof metaData === 'string') {
-      try { return JSON.parse(metaData); } catch { return null; }
+      try {
+        return JSON.parse(metaData);
+      } catch {
+        return null;
+      }
     }
     return metaData;
   };
@@ -115,21 +125,34 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
                 transition-all duration-300"
             >
               {/* hover overlay */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition
-                bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 pointer-events-none" />
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition
+                bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 pointer-events-none"
+              />
 
               {/* ── ACTION BUTTONS ── */}
-              <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+              <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition ">
+                <button
+                  onClick={() => onContentEdit(tool)}
+                  title="Page Content"
+                  className="p-2 rounded-lg bg-pink-400 dark:bg-slate-800 shadow text-sm flex gap-1.5
+                    hover:bg-blue-600 hover:text-white cursor-pointer transition"
+                >
+                  <Edit3Icon className="w-4 h-4" /> Page Content
+                </button>
                 <button
                   onClick={() => onEdit(tool)}
                   title="Edit"
-                  className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow
+                  className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow 
                     hover:bg-blue-600 hover:text-white cursor-pointer transition"
                 >
                   <Edit2Icon className="w-4 h-4" />
                 </button>
+
                 <button
-                  onClick={() => tool.url_id && tool.category && onDelete(tool.url_id, tool.category)}
+                  onClick={() =>
+                    tool.url_id && tool.category && onDelete(tool.url_id, tool.category)
+                  }
                   disabled={!tool.url_id}
                   title="Delete"
                   className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow
@@ -169,23 +192,37 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
                   </div>
                 )}
 
+                {tool.FAQ &&
+                  (() => {
+                    const qa = getMeta(tool.FAQ);
+
+                    return (
+                      <div className="flex flex-col gap-4">
+                        <FAQList data={qa} />
+                      </div>
+                    );
+                  })()}
+
                 {/* ── META PANEL ── */}
                 {meta && (
-                  <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100
-                    dark:border-slate-700 p-3 space-y-2 text-xs">
-
+                  <div
+                    className="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100
+                    dark:border-slate-700 p-3 space-y-2 text-xs"
+                  >
                     {/* Core SEO */}
                     {(meta.title || meta.description || meta.keywords) && (
                       <div className="space-y-1.5">
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1">
                           <Globe className="w-3 h-3" /> SEO
                         </p>
-                        <MetaRow icon={Globe}  label="Title"       value={meta.title} />
-                        <MetaRow icon={Globe}  label="Description" value={meta.description} />
+                        <MetaRow icon={Globe} label="Title" value={meta.title} />
+                        <MetaRow icon={Globe} label="Description" value={meta.description} />
                         {meta.keywords && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {meta.keywords.split(',').map((k, i) => (
-                              <Badge key={i} color="slate">{k.trim()}</Badge>
+                              <Badge key={i} color="slate">
+                                {k.trim()}
+                              </Badge>
                             ))}
                           </div>
                         )}
@@ -199,10 +236,10 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
                           <Share2 className="w-3 h-3" /> Open Graph
                         </p>
                         {meta.ogType && <Badge color="purple">{meta.ogType}</Badge>}
-                        <MetaRow icon={Share2} label="OG Title"       value={meta.ogTitle} />
+                        <MetaRow icon={Share2} label="OG Title" value={meta.ogTitle} />
                         <MetaRow icon={Share2} label="OG Description" value={meta.ogDescription} />
-                        <MetaRow icon={Share2} label="OG Image"       value={meta.ogImage} />
-                        <MetaRow icon={Share2} label="OG URL"         value={meta.ogUrl} />
+                        <MetaRow icon={Share2} label="OG Image" value={meta.ogImage} />
+                        <MetaRow icon={Share2} label="OG URL" value={meta.ogUrl} />
                       </div>
                     )}
 
@@ -212,7 +249,7 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1">
                           <Image className="w-3 h-3" /> Image
                         </p>
-                        <MetaRow icon={Image} label="Alt Text"  value={meta.imageAlt} />
+                        <MetaRow icon={Image} label="Alt Text" value={meta.imageAlt} />
                         <MetaRow icon={Image} label="File Name" value={meta.imageFileName} />
                       </div>
                     )}
@@ -223,7 +260,7 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
                         <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1">
                           <Link2 className="w-3 h-3" /> URL
                         </p>
-                        <MetaRow icon={Link2} label="Slug" value={`/tools/${meta.urlSlug}`} />
+                        <MetaRow icon={Link2} label="Slug" value={`${meta.urlSlug}`} />
                       </div>
                     )}
 
@@ -243,8 +280,10 @@ export const AdminList = ({ data, fetching, onEdit, onDelete }: AdminListProps) 
               </div>
 
               {/* ── CARD FOOTER ── */}
-              <div className="relative px-5 py-3 border-t border-slate-200 dark:border-slate-800
-                flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-900/50">
+              <div
+                className="relative px-5 py-3 border-t border-slate-200 dark:border-slate-800
+                flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 dark:bg-slate-900/50"
+              >
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge color="blue">{tool.category}</Badge>
                   <span className="text-xs text-slate-400 font-mono">#{tool.url_id}</span>

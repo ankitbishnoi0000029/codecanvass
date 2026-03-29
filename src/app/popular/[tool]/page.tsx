@@ -265,7 +265,6 @@ export default function Page() {
     const selectedData = list.find(
         (item) => (item.yrl ?? String(item.url_id)) === selectedTool
     );
-
     const selectedOption = toolOptions.find(
         (opt) => opt.id === selectedTool
     );
@@ -361,7 +360,7 @@ export default function Page() {
                     </Button>
                 </div>
 
-                {selectedData && <Meta selectedData={selectedData} />}
+                {selectedData && <Meta  selectedData={selectedData} />}
             </SidebarContentWrapper>
         </ReusableSidebar>
     );

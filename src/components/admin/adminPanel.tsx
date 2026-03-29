@@ -16,6 +16,7 @@ import { AdminList } from '../sections/admin/list';
 import { Dialog } from '../ui/dialog';
 import { AdminForm } from '../sections/admin/form';
 import { AdminHeader } from '../sections/admin/header';
+import { ClassicEditor } from '../sections/cl-editer';
 
 const EMPTY_META: MetaData = {
   title: '',
@@ -57,17 +58,18 @@ export default function AdminPanel() {
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   /* ── STATE ── */
-  const [tools, setTools]               = useState<fromDataType[]>([]);
-  const [fetching, setFetching]         = useState(false);
+  const [tools, setTools] = useState<fromDataType[]>([]);
+  const [fetching, setFetching] = useState(false);
   const [activeCategory, setActiveCategory] = useState('popular');
-  const [isSidebarOpen, setIsSidebarOpen]   = useState(false);
-  const [isModalOpen, setIsModalOpen]       = useState(false);
-  const [mode, setMode]                 = useState<'add' | 'edit' | ''>('');
-  const [searchTerm, setSearchTerm]     = useState('');
-  const [metadata, setMata]             = useState<MetaData>(EMPTY_META);
-  const [formData, setFormData]         = useState<fromDataType>(EMPTY_FORM);
-  const [loading, setLoading]           = useState(false);
-  const [cateID, setCateID]             = useState('popular');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mode, setMode] = useState<'add' | 'edit' | 'contentEdit' | ''>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [metadata, setMata] = useState<MetaData>(EMPTY_META);
+  const [formData, setFormData] = useState<fromDataType>(EMPTY_FORM);
+  const [loading, setLoading] = useState(false);
+  const [cateID, setCateID] = useState('popular');
+  const [contentid, setContentId] = useState('');
 
   const router = useRouter();
 
@@ -86,30 +88,35 @@ export default function AdminPanel() {
     setFetching(true);
     try {
       const data = await getTableData(id);
-      const arr  = Array.isArray(data) ? data : [];
+      const arr = Array.isArray(data) ? data : [];
       const mappedTools: fromDataType[] = arr.map((item: any) => ({
-        id:        item.id,
-        url_id:    item.url_id,
-        name:      item.name      || '',
-        urlName:   item.urlName   || '',
-        des:       item.des       || '',
-        keyword:   item.keyword   || '',
-        category:  item.category  || id,
-        metaData:  item.metadata  || '',
-        route:     item.route     || '',
-        url:       item.url       || '',
+        id: item.id,
+        url_id: item.url_id,
+        name: item.name || '',
+        urlName: item.urlName || '',
+        des: item.des || '',
+        keyword: item.keyword || '',
+        category: item.category || id,
+        metaData: item.metadata || '',
+        route: item.route || '',
+        url: item.url || '',
+        FAQ: item.FAQ || '',
       }));
       setTools(mappedTools);
     } finally {
       setFetching(false);
     }
   };
-
+  // console.log('Fetched tools:', tools);
   /* ── HELPERS ── */
   const getMeta = (metaData?: string | any): MetaData | null => {
     if (!metaData) return null;
     if (typeof metaData === 'string') {
-      try { return JSON.parse(metaData); } catch { return null; }
+      try {
+        return JSON.parse(metaData);
+      } catch {
+        return null;
+      }
     }
     return metaData;
   };
@@ -122,7 +129,7 @@ export default function AdminPanel() {
   };
 
   /* ── MODAL ── */
-  const openModal  = () => setIsModalOpen(true);
+  const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setFormData(EMPTY_FORM);
     setMata(EMPTY_META);
@@ -140,6 +147,19 @@ export default function AdminPanel() {
 
   const handleEdit = (tooldata: fromDataType) => {
     setMode('edit');
+    // console.log('handleEdit called with:', mode);
+
+    const parsed = getMeta(tooldata.metaData);
+    setMata(parsed ? { ...EMPTY_META, ...parsed } : EMPTY_META);
+    setFormData(tooldata);
+    openModal();
+  };
+
+  const handleContentEdit = (tooldata: fromDataType) => {
+    console.log('handlecontentEdit called with:', mode);
+    setMode('contentEdit');
+
+    setContentId(tooldata.url_id || '');
     const parsed = getMeta(tooldata.metaData);
     setMata(parsed ? { ...EMPTY_META, ...parsed } : EMPTY_META);
     setFormData(tooldata);
@@ -197,9 +217,9 @@ export default function AdminPanel() {
   /* ── FILTERED LIST ── */
   const filteredTools = tools.filter(
     (t) =>
-      (t.name?.toLowerCase()   ?? '').includes(searchTerm.toLowerCase()) ||
+      (t.name?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
       (t.url_id?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
-      (t.des?.toLowerCase()    ?? '').includes(searchTerm.toLowerCase())
+      (t.des?.toLowerCase() ?? '').includes(searchTerm.toLowerCase())
   );
 
   /* ── UI ── */
@@ -227,21 +247,37 @@ export default function AdminPanel() {
           data={filteredTools}
           fetching={fetching}
           onEdit={handleEdit}
+          onContentEdit={handleContentEdit}
           onDelete={handleDelete}
         />
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <AdminForm
-            mode={mode}
-            formData={formData}
-            metadata={metadata}
-            loading={loading}
-            setFormData={setFormData}
-            setMata={setMata}
-            handleSubmit={handleSubmit}
-            closeModal={closeModal}
-            generateRandomId={generateRandomId}
-          />
+          {mode === 'contentEdit' ? (
+            <ClassicEditor
+              url_id={formData.url_id}
+              table={formData.category}
+              mode={mode}
+              formData={formData}
+              metadata={metadata}
+              setFormData={setFormData}
+              setMata={setMata}
+              handleSubmit={handleSubmit}
+              loading={loading}
+              closeModal={closeModal}
+            />
+          ) : (
+            <AdminForm
+              mode={mode}
+              formData={formData}
+              metadata={metadata}
+              setFormData={setFormData}
+              setMata={setMata}
+              handleSubmit={handleSubmit}
+              loading={loading}
+              closeModal={closeModal}
+              generateRandomId={generateRandomId}
+            />
+          )}
         </Dialog>
       </div>
     </div>

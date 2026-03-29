@@ -31,7 +31,7 @@ export function SqlConverter() {
     };
     fetchData();
   }, []);
-
+console.log('SQL Converters List:', list);
   // Get slug from URL
   useEffect(() => {
     const slug = pathname.split('/').pop() ?? '';
@@ -46,6 +46,11 @@ export function SqlConverter() {
       label: item.urlName,
       description: item.des,
       icon: Palette,
+      keyword: item.keyword,
+      bottom_des : item.bottom_des,
+      FAQ : item.FAQ,
+      code : item.code,
+      content : item.content,
     })) || [];
 
   const selectedData: dataType =
@@ -60,7 +65,7 @@ export function SqlConverter() {
       icon: Settings,
     },
   ];
-
+  console.log('Selected Converter:', selectedOption);
   const handleConverterChange = (converterId: string) => {
     router.push(`${converterId}`);
   };

@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import { getNavbar } from '@/actions/dbAction';
 import { dataType } from '@/utils/types/uiTypes';
 import React, { useState, useRef, useEffect } from 'react';
@@ -10,23 +10,32 @@ export function XmlFormatterPage() {
   const [tabSpace, setTabSpace] = useState('2');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const fileInputRef = useRef(null);
-  const [list , setList] = useState<dataType[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [list, setList] = useState<dataType[]>([]);
 
- const fetchData = async () => {
-  try {
-    const response = await getNavbar('xml');
-    setList(response);
-  } catch (error) {
-    console.error("Fetch error:", error);
-  }
-};
+  const fetchData = async () => {
+    try {
+      const response = await getNavbar('xml');
+      setList(response);
+    } catch (error) {
+      console.error('Fetch error:', error);
+    }
+  };
 
-useEffect(() => {
-  fetchData();
-}, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-
+  // Toast helpers
+  const showToast = (msg: string, isError = false) => {
+    if (isError) {
+      setError(msg);
+      setTimeout(() => setError(''), 3000);
+    } else {
+      setSuccess(msg);
+      setTimeout(() => setSuccess(''), 3000);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputXml(e.target.value);
@@ -39,22 +48,21 @@ useEffect(() => {
     setError('');
     setSuccess('');
     if (!inputXml.trim()) {
-      setError('Please enter XML data');
+      showToast('Please enter XML data', true);
       return;
     }
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(inputXml, 'text/xml');
       const parseError = xmlDoc.getElementsByTagName('parsererror');
-      
+
       if (parseError.length > 0) {
-        setError('Invalid XML: ' + parseError[0].textContent);
+        showToast('Invalid XML: ' + parseError[0].textContent, true);
       } else {
-        setSuccess('✓ Valid XML');
-        setTimeout(() => setSuccess(''), 3000);
+        showToast('✓ Valid XML');
       }
     } catch (e: unknown) {
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      showToast('Error: ' + (e instanceof Error ? e.message : String(e)), true);
     }
   };
 
@@ -62,25 +70,24 @@ useEffect(() => {
     setError('');
     setSuccess('');
     if (!inputXml.trim()) {
-      setError('Please enter XML data');
+      showToast('Please enter XML data', true);
       return;
     }
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(inputXml, 'text/xml');
       const parseError = xmlDoc.getElementsByTagName('parsererror');
-      
+
       if (parseError.length > 0) {
-        setError('Invalid XML');
+        showToast('Invalid XML', true);
         return;
       }
-      
+
       const formatted = formatXml(inputXml, parseInt(tabSpace));
       setOutputXml(formatted);
-      setSuccess('✓ XML Formatted Successfully');
-      setTimeout(() => setSuccess(''), 3000);
+      showToast('✓ XML Formatted Successfully');
     } catch (e: unknown) {
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      showToast('Error: ' + (e instanceof Error ? e.message : String(e)), true);
     }
   };
 
@@ -88,53 +95,55 @@ useEffect(() => {
     const PADDING = ' '.repeat(spaces);
     const reg = /(>)(<)(\/*)/g;
     let pad = 0;
-    
+
     xml = xml.replace(reg, '$1\n$2$3');
-    
-    return xml.split('\n').map((node) => {
-      let indent = 0;
-      if (node.match(/.+<\/\w[^>]*>$/)) {
-        indent = 0;
-      } else if (node.match(/^<\/\w/)) {
-        if (pad !== 0) {
-          pad -= 1;
+
+    return xml
+      .split('\n')
+      .map((node) => {
+        let indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+          indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+          if (pad !== 0) {
+            pad -= 1;
+          }
+        } else if (node.match(/^<\w([^>]*[^\/])?>.*$/)) {
+          indent = 1;
+        } else {
+          indent = 0;
         }
-      } else if (node.match(/^<\w([^>]*[^\/])?>.*$/)) {
-        indent = 1;
-      } else {
-        indent = 0;
-      }
-      
-      const padding = PADDING.repeat(pad);
-      pad += indent;
-      
-      return padding + node;
-    }).join('\n');
+
+        const padding = PADDING.repeat(pad);
+        pad += indent;
+
+        return padding + node;
+      })
+      .join('\n');
   };
 
   const minifyCompact = () => {
     setError('');
     setSuccess('');
     if (!inputXml.trim()) {
-      setError('Please enter XML data');
+      showToast('Please enter XML data', true);
       return;
     }
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(inputXml, 'text/xml');
       const parseError = xmlDoc.getElementsByTagName('parsererror');
-      
+
       if (parseError.length > 0) {
-        setError('Invalid XML');
+        showToast('Invalid XML', true);
         return;
       }
-      
+
       const minified = inputXml.replace(/>\s+</g, '><').trim();
       setOutputXml(minified);
-      setSuccess('✓ XML Minified Successfully');
-      setTimeout(() => setSuccess(''), 3000);
+      showToast('✓ XML Minified Successfully');
     } catch (e: unknown) {
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      showToast('Error: ' + (e instanceof Error ? e.message : String(e)), true);
     }
   };
 
@@ -142,25 +151,24 @@ useEffect(() => {
     setError('');
     setSuccess('');
     if (!inputXml.trim()) {
-      setError('Please enter XML data');
+      showToast('Please enter XML data', true);
       return;
     }
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(inputXml, 'text/xml');
       const parseError = xmlDoc.getElementsByTagName('parsererror');
-      
+
       if (parseError.length > 0) {
-        setError('Invalid XML');
+        showToast('Invalid XML', true);
         return;
       }
-      
+
       const json = xmlToJsonConverter(xmlDoc.documentElement);
       setOutputXml(JSON.stringify(json, null, 2));
-      setSuccess('✓ Converted to JSON');
-      setTimeout(() => setSuccess(''), 3000);
+      showToast('✓ Converted to JSON');
     } catch (e: unknown) {
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      showToast('Error: ' + (e instanceof Error ? e.message : String(e)), true);
     }
   };
 
@@ -213,25 +221,24 @@ useEffect(() => {
     setError('');
     setSuccess('');
     if (!inputXml.trim()) {
-      setError('Please enter XML data');
+      showToast('Please enter XML data', true);
       return;
     }
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(inputXml, 'text/xml');
       const parseError = xmlDoc.getElementsByTagName('parsererror');
-      
+
       if (parseError.length > 0) {
-        setError('Invalid XML');
+        showToast('Invalid XML', true);
         return;
       }
-      
+
       const tree = buildXmlTree(xmlDoc.documentElement, 0);
       setOutputXml(tree);
-      setSuccess('✓ XML Tree Generated');
-      setTimeout(() => setSuccess(''), 3000);
+      showToast('✓ XML Tree Generated');
     } catch (e: unknown) {
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      showToast('Error: ' + (e instanceof Error ? e.message : String(e)), true);
     }
   };
 
@@ -257,8 +264,7 @@ useEffect(() => {
   const copyToClipboard = () => {
     if (!outputXml) return;
     navigator.clipboard.writeText(outputXml);
-    setSuccess('✓ Copied to Clipboard');
-    setTimeout(() => setSuccess(''), 2000);
+    showToast('✓ Copied to Clipboard');
   };
 
   const downloadXml = () => {
@@ -270,8 +276,7 @@ useEffect(() => {
     a.download = 'formatted.xml';
     a.click();
     URL.revokeObjectURL(url);
-    setSuccess('✓ Downloaded');
-    setTimeout(() => setSuccess(''), 2000);
+    showToast('✓ Downloaded');
   };
 
   const clearAll = () => {
@@ -290,8 +295,7 @@ useEffect(() => {
         if (typeof result === 'string') {
           setInputXml(result);
           setOutputXml('');
-          setSuccess('✓ File Loaded Successfully');
-          setTimeout(() => setSuccess(''), 2000);
+          showToast('✓ File Loaded Successfully');
         }
       };
       reader.readAsText(file);
@@ -316,43 +320,66 @@ useEffect(() => {
 </bookstore>`;
     setInputXml(sample);
     setOutputXml('');
-    setSuccess('✓ Sample Loaded');
-    setTimeout(() => setSuccess(''), 2000);
+    showToast('✓ Sample Loaded');
   };
 
+  // Parse FAQ data if available
+  let faqItems: { question: string; answer: string }[] = [];
+  if (list && list.length > 0 && list[0]?.FAQ) {
+    try {
+      faqItems = JSON.parse(list[0].FAQ);
+    } catch (e) {
+      console.error('Failed to parse FAQ', e);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-400 via-teal-500 to-cyan-600">
-      <div className="max-w-[1600px] mx-auto p-4">
-          <h1 className="text-4xl font-bold text-center text-white mb-8">XML Formatter & Converter</h1>
-          <h2 className="text-center text-white mb-12 text-lg">Instantly format, validate, and convert your XML data with ease!</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-          <div className="lg:col-span-5 bg-white rounded-lg shadow-xl flex flex-col h-full">
-            <div className="bg-slate-700 px-4 py-2 flex items-center gap-2 rounded-t-lg flex-shrink-0">
-              <span className="text-white font-bold text-lg mr-2">Input</span>
-              <div className="flex items-center gap-2 flex-1">
-                <button className="text-white hover:bg-slate-600 p-1 rounded" title="Format">≡</button>
-                <button className="text-white hover:bg-slate-600 p-1 rounded" title="Align">☰</button>
-                <button className="text-white hover:bg-slate-600 p-1 rounded" title="Sort">⇅</button>
-              </div>
-              <button onClick={loadSample} className="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded text-sm font-semibold">
-                Sample
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+      {/* Toast notifications */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-out">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in-out">
+          {success}
+        </div>
+      )}
+
+      <div className="max-w-[1600px] mx-auto">
+        <h1 className="text-4xl font-bold text-center text-white my-2 drop-shadow-lg">
+          XML Formatter & Converter
+        </h1>
+        <p className="text-center text-white/90 mb-2 text-lg max-w-2xl mx-auto">
+          Instantly format, validate, and convert your XML data with ease!
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+          {/* Input Panel */}
+          <div className="lg:col-span-5 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col h-full border border-white/20">
+            <div className="bg-white/20 px-4 py-3 flex items-center justify-between rounded-t-2xl">
+              <span className="text-white font-bold text-lg">Input</span>
+              <button
+                onClick={loadSample}
+                className="bg-white/30 hover:bg-white/40 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-all"
+              >
+                📝 Sample
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
               <textarea
                 value={inputXml}
                 onChange={handleInputChange}
-                className="w-full h-full p-4 font-mono text-sm focus:outline-none resize-none bg-gray-50"
+                className="w-full h-full p-4 font-mono text-sm bg-white/90 focus:outline-none resize-none text-gray-800 rounded-b-2xl"
                 placeholder="Paste your XML here..."
               />
             </div>
-            <div className="px-4 py-2 bg-gray-100 text-xs text-gray-600 flex-shrink-0">
-              Ln: 1 Col: 1
-            </div>
           </div>
 
+          {/* Actions Panel */}
           <div className="lg:col-span-2 flex flex-col gap-3 h-full">
-            <div className="bg-teal-500 rounded-lg shadow-xl flex flex-col gap-3 p-4 flex-1">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col gap-3 p-4 flex-1 border border-white/20">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -361,93 +388,92 @@ useEffect(() => {
                 className="hidden"
               />
               <button
-                onClick={() => (fileInputRef.current as any)?.click()}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                Upload Data
+                📁 Upload Data
               </button>
 
               <select
                 value={tabSpace}
                 onChange={(e) => setTabSpace(e.target.value)}
-                className="bg-white text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 text-white py-3 px-4 rounded-xl font-semibold text-sm border-none focus:ring-0"
               >
-                <option value="2">2 Tab Space</option>
-                <option value="4">4 Tab Space</option>
+                <option value="2" className="text-gray-800">
+                  2 Spaces
+                </option>
+                <option value="4" className="text-gray-800">
+                  4 Spaces
+                </option>
               </select>
 
               <button
                 onClick={validateXml}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                Validate
+                ✅ Validate
               </button>
 
               <button
                 onClick={formatBeautify}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                Format / Beautify
+                ✨ Format / Beautify
               </button>
 
               <button
                 onClick={showXmlTree}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                XML Tree
+                🌳 XML Tree
               </button>
 
               <button
                 onClick={minifyCompact}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                Minify / Compact
+                🔽 Minify / Compact
               </button>
 
               <button
                 onClick={xmlToJson}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all"
               >
-                XML to JSON
+                🔄 XML to JSON
               </button>
 
               <button
                 onClick={downloadXml}
                 disabled={!outputXml}
-                className="bg-white hover:bg-gray-100 text-teal-700 py-3 px-4 rounded-lg font-bold text-sm border-2 border-teal-300 disabled:opacity-50"
+                className="bg-white/20 hover:bg-white/30 text-white py-3 px-4 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
               >
-                Download
+                💾 Download
               </button>
-
-              <div className="mt-auto pt-4 border-t-2 border-white/30">
-                <div className="text-center text-white">
+              <button
+                onClick={clearAll}
+                className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-xl font-bold text-sm shadow-lg transition-all"
+              >
+                🗑️ Clear All
+              </button>
+              <div className="mt-auto pt-4 border-t border-white/30">
+                <div className="text-center text-white/80">
                   <p className="font-bold text-sm mb-1">XML Full Form</p>
                   <p className="text-xs">Extensible Markup Language</p>
                 </div>
               </div>
-
-              {error && (
-                <div className="bg-red-100 border-2 border-red-400 text-red-700 px-3 py-2 rounded-lg text-xs">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="bg-green-100 border-2 border-green-400 text-green-700 px-3 py-2 rounded-lg text-xs">
-                  {success}
-                </div>
-              )}
             </div>
           </div>
 
-          <div className="lg:col-span-5 bg-white rounded-lg shadow-xl flex flex-col h-full">
-            <div className="bg-slate-700 px-4 py-2 flex items-center gap-2 rounded-t-lg flex-shrink-0">
-              <span className="text-white font-bold text-lg mr-2">Output</span>
-              <div className="flex items-center gap-2 flex-1">
-                <button className="text-white hover:bg-slate-600 p-1 rounded">≡</button>
-                <button className="text-white hover:bg-slate-600 p-1 rounded">☰</button>
-              </div>
-              <button onClick={copyToClipboard} disabled={!outputXml} className="text-white hover:bg-slate-600 p-1 rounded disabled:opacity-50" title="Copy">
+          {/* Output Panel */}
+          <div className="lg:col-span-5 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col h-full border border-white/20">
+            <div className="bg-white/20 px-4 py-3 flex items-center justify-between rounded-t-2xl">
+              <span className="text-white font-bold text-lg">Output</span>
+              <button
+                onClick={copyToClipboard}
+                disabled={!outputXml}
+                className="text-white hover:bg-white/30 p-2 rounded-lg transition-all disabled:opacity-50"
+                title="Copy"
+              >
                 📋
               </button>
             </div>
@@ -455,25 +481,65 @@ useEffect(() => {
               <textarea
                 value={outputXml}
                 readOnly
-                className="w-full h-full p-4 font-mono text-sm bg-gray-50 resize-none focus:outline-none"
+                className="w-full h-full p-4 font-mono text-sm bg-white/90 focus:outline-none resize-none text-gray-800 rounded-b-2xl"
                 placeholder="Output will appear here..."
               />
-            </div>
-            <div className="px-4 py-2 bg-gray-100 text-xs text-gray-600 flex-shrink-0">
-              Ln: 1 Col: 1
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex gap-4 justify-center">
-          <button onClick={clearAll} className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg font-bold text-sm shadow-lg">
-            Clear All
-          </button>
+        {/* FAQ Section */}
+        {faqItems.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-3xl font-bold text-white text-center mb-8">
+              Frequently Asked Questions
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {faqItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all"
+                >
+                  <h3 className="text-xl font-semibold text-white mb-3 flex items-start gap-2">
+                    <span className="text-indigo-300">Q{index + 1}.</span>
+                    {item.question}
+                  </h3>
+                  <p className="text-white/80 leading-relaxed">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Meta Information */}
+        <div className="mt-8 text-center text-white/60 text-sm">
+          <Meta selectedData={list} />
         </div>
-        <div className="mt-8 text-center text-gray-600 text-sm">
-        <Meta selectedData={list} />
       </div>
-      </div>
+
+      <style jsx>{`
+        @keyframes fadeInOut {
+          0% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          10% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          90% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 }

@@ -237,6 +237,7 @@ export default function BGRemover() {
                       strokeWidth="1.5"
                       strokeLinecap="round"
                     />
+                    
                     <line
                       x1="5"
                       y1="8"

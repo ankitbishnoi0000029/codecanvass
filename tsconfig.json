@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-, "src/app/api/generate/route.js"  ],
+, "src/app/api/generate/route.js", "src/app/api/download/route.js"  ],
   "exclude": [
     "node_modules"
   ]
