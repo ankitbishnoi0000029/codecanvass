@@ -45,7 +45,7 @@ const Meta = ({ selectedData }: any) => {
 
       {/* CONTENT SECTIONS */}
       <div className="grid md:grid-cols-2 gap-6">
-        {content.map((item: any, i: number) => (
+        {content?.map((item: any, i: number) => (
           <div
             key={i}
             className="p-6 rounded-2xl bg-white border shadow hover:shadow-lg transition"
@@ -55,7 +55,7 @@ const Meta = ({ selectedData }: any) => {
             </h2>
 
             <ul className="list-disc pl-5 text-gray-600 space-y-1">
-              {item.content.split('\n').map((line: string, idx: number) => (
+              {item?.content.split('\n').map((line: string, idx: number) => (
                 <li key={idx}>{line}</li>
               ))}
             </ul>

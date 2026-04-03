@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, Settings, Palette } from "lucide-react";
 import { getTableData } from "@/actions/dbAction";
-import { dataType } from "@/utils/types/uiTypes";
+import { dataType, PageDataUI } from "@/utils/types/uiTypes";
 import { PageTitle } from "@/components/sections/title";
 import Meta from "@/components/sections/meta";
+import PageRenderer from "../ui/page-rander";
 
 /* ---------------- HELPERS ---------------- */
 
@@ -229,7 +230,7 @@ const toolFunctions: Record<string, ToolFunction> = {
 
 /* ---------------- PAGE ---------------- */
 
-export default function Page() {
+export default function PopularTools(data:PageDataUI) {
     const router = useRouter();
     const pathname = usePathname();
 
@@ -360,7 +361,8 @@ export default function Page() {
                     </Button>
                 </div>
 
-                {selectedData && <Meta  selectedData={selectedData} />}
+             <PageRenderer data={data} />
+                {/* {selectedData && <Meta  selectedData={selectedData} />} */}
             </SidebarContentWrapper>
         </ReusableSidebar>
     );

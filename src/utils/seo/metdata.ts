@@ -56,7 +56,7 @@ export const buildMetadata = async ({
 const robots  = get(meta, "robots") ?? "index, follow"; // default to allowing indexing
   /* ── URL slug: prefer metadata.urlSlug, then db slug, then route ── */
   const urlSlug =  dbSlug ;
-  const canonical = urlSlug ? `${SITE_URL}/${urlSlug}/${route}` : `${SITE_URL}${route}`;
+  const canonical = urlSlug ? `${SITE_URL}/${urlSlug}/${route}` : `${SITE_URL}/${route}`;
 
 
   /* ── OG ── */

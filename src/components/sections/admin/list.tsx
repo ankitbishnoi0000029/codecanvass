@@ -11,9 +11,11 @@ import {
   Image,
   Link2,
   Edit3Icon,
+  Edit2,
 } from 'lucide-react';
 import Link from 'next/link';
 import FAQList from './faqSection';
+import { useRouter } from 'next/navigation';
 
 interface AdminListProps {
   data: fromDataType[];
@@ -76,6 +78,7 @@ const MetaRow = ({
 };
 
 export const AdminList = ({ data, fetching, onContentEdit, onEdit, onDelete }: AdminListProps) => {
+  const route = useRouter();
   // console.log('AdminList data:', data);
   const getMeta = (metaData?: string | any): ParsedMeta | null => {
     if (!metaData) return null;
@@ -89,6 +92,10 @@ export const AdminList = ({ data, fetching, onContentEdit, onEdit, onDelete }: A
     return metaData;
   };
 
+  const handlePageContent = (tool: fromDataType) => {
+  window.open('/adminPanel/editer?id='+tool.url_id+'&table='+tool.category,'_blank');
+};
+  
   /* ── LOADING ── */
   if (fetching) {
     return (
@@ -132,6 +139,14 @@ export const AdminList = ({ data, fetching, onContentEdit, onEdit, onDelete }: A
 
               {/* ── ACTION BUTTONS ── */}
               <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition ">
+                 <button
+                  onClick={() => handlePageContent(tool)}
+                  title="Page Content"
+                  className="p-2 rounded-lg bg-pink-400 dark:bg-slate-800 shadow text-sm flex gap-1.5
+                    hover:bg-blue-600 hover:text-white cursor-pointer transition"
+                >
+                  <Edit2 className="w-4 h-4" /> Full Seo Content
+                </button>
                 <button
                   onClick={() => onContentEdit(tool)}
                   title="Page Content"

@@ -76,3 +76,75 @@ export interface Subcategory {
   name: string;
   category_id: string | number;
 }
+
+ // ═══════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════
+export interface EditorData {
+  title: string;
+  content: string;
+  excerpt: string;
+  description: string;
+  faqs: { question: string; answer: string }[];
+  slug: string;
+  status: string;
+  visibility: string;
+  password: string;
+  publishDate: string;
+  categories: string[];
+  tags: string[];
+  featuredImage: string;
+  allowComments: boolean;
+  allowPingbacks: boolean;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  wordCount: number;
+  charCount: number;
+  format: string;
+  author: string;
+  template: string;
+  customFields: { name: string; value: string }[];
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  twitterCard: string;
+  canonicalUrl: string;
+  readingTime: number;
+}
+
+export interface PageDataUI {
+  id: number;
+  title: string;
+  slug: string; // url_id
+
+  content: string;
+  excerpt?: string;
+
+  allowComments: boolean;
+  allowPingbacks: boolean;
+
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+
+  wordCount: number;
+  charCount: number;
+  readingTime: number;
+
+  format: string;
+  author: string;
+  template: string;
+
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+
+  twitterCard: string;
+  canonicalUrl?: string;
+
+  categories: string[];
+
+  createdAt: string;
+  updatedAt: string;
+}
