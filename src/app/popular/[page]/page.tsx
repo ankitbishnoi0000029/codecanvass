@@ -1,5 +1,6 @@
 import { getNewPageContent } from "@/actions/dbAction";
 import PopularTools from "@/components/sections/popular-tools";
+import { PageDataUI } from "@/utils/types/uiTypes";
 
 // ✅ METADATA
 export async function generateMetadata({ params }: { params: Promise<{ page: string }> }) {
@@ -28,9 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ page: str
 const Page = async ({ params }: { params: Promise<{ page: string }> }) => {
   const { page } = await params; // ✅ FIX
 
-  console.log("PAGE PARAM:", page);
-
-  let data = null;
+  let data : PageDataUI | null = null;
 
   try {
     const res = await getNewPageContent(page);
@@ -41,7 +40,7 @@ const Page = async ({ params }: { params: Promise<{ page: string }> }) => {
     console.error("Page fetch error:", err);
   }
 
-  return <PopularTools {...(data ?? {})} />;
+  return <PopularTools data = {data || {}} />;
 };
 
 export default Page;
