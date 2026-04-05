@@ -42,7 +42,6 @@ const Meta = ({ selectedData }: any) => {
         </div>
       )}
 
-
       {/* CONTENT SECTIONS */}
       <div className="grid md:grid-cols-2 gap-6">
         {content?.map((item: any, i: number) => (

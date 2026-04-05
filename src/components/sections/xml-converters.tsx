@@ -764,7 +764,7 @@ export default function XmlConverters() {
 
         {/* DETAILS BOX */}
         
-          { selectedOption && <Meta selectedData={selectedOption} />}
+          {/* { selectedOption && <Meta selectedData={selectedOption} />} */}
         
       </SidebarContentWrapper>
     </ReusableSidebar>

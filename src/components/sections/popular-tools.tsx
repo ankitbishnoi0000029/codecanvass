@@ -230,7 +230,8 @@ const toolFunctions: Record<string, ToolFunction> = {
 
 /* ---------------- PAGE ---------------- */
 
-export default function PopularTools(data: any) {
+export default function 
+PopularTools(data: any) {
     const router = useRouter();
     const pathname = usePathname();
 

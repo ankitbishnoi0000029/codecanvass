@@ -1,26 +1,24 @@
 import mysql from 'mysql2/promise';
 
-// Load env vars for non-Next.js contexts (e.g. scripts, tests)
+// Load env vars for non-Next.js contexts
 if (!process.env.DB_HOST) {
   try {
     require('dotenv').config({ path: '.env.local' });
-  } catch {
-    // dotenv may not be installed — that's fine in production
-  }
+  } catch {}
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────
 
 export interface DbPool extends mysql.Pool {}
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Config ────────────────────────────────────────────
 
 function getPoolConfig(): mysql.PoolOptions {
   const { DB_HOST, DB_USER, DB_PASSWORD, DB_SCHEMA, DB_PORT } = process.env;
 
   if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_SCHEMA) {
     throw new Error(
-      `Missing required DB env vars. Received: DB_HOST=${DB_HOST}, DB_USER=${DB_USER}, DB_SCHEMA=${DB_SCHEMA}`
+      `Missing DB env vars. DB_HOST=${DB_HOST}, DB_USER=${DB_USER}, DB_SCHEMA=${DB_SCHEMA}`
     );
   }
 
@@ -31,70 +29,103 @@ function getPoolConfig(): mysql.PoolOptions {
     database: DB_SCHEMA,
     port: Number(DB_PORT) || 3306,
 
-    // Pool sizing — keep small for serverless/edge environments
     waitForConnections: true,
-    connectionLimit: 5,
-    queueLimit: 50,           // queue up to 50 pending requests instead of unlimited
+    connectionLimit: 10,
+    queueLimit: 0,
 
-    // Timeouts
-    connectTimeout: 10_000,   // 10 s to establish connection
-    idleTimeout: 60_000,      // release idle connections after 60 s
+    connectTimeout: 10000,
 
-    // Keep-alive so the TCP connection doesn't silently drop
+    // 🔥 IMPROVED
     enableKeepAlive: true,
-    keepAliveInitialDelay: 10_000,
+    keepAliveInitialDelay: 0,
 
-    // Automatically re-establish dropped connections
-    // (mysql2 handles this internally via the pool)
+    idleTimeout: 30000,
+
     namedPlaceholders: true,
   };
 }
 
-// ─── Singleton (survives HMR in dev, one instance per lambda warm start) ─────
+// ─── Singleton ─────────────────────────────────────────
 
 const GLOBAL_KEY = Symbol.for('mysql2.pool');
 
-type GlobalWithPool = typeof globalThis & { [GLOBAL_KEY]?: mysql.Pool };
+type GlobalWithPool = typeof globalThis & {
+  [GLOBAL_KEY]?: mysql.Pool;
+};
 
 function getPool(): mysql.Pool {
   const g = globalThis as GlobalWithPool;
 
   if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = mysql.createPool(getPoolConfig());
+    const pool = mysql.createPool(getPoolConfig());
 
-    // Surface pool-level errors rather than swallowing them silently
-    g[GLOBAL_KEY].on('connection', (conn) => {
+    // 🔥 connection-level error handling
+    pool.on('connection', (conn) => {
       conn.on('error', (err) => {
-        console.error('[db] connection error:', err.code, err.message);
+        console.error('[db] connection error:', err.code);
+
+        if (
+          err.code === 'PROTOCOL_CONNECTION_LOST' ||
+          err.code === 'ECONNRESET'
+        ) {
+          console.log('[db] connection lost, will auto-recover via pool');
+        }
       });
     });
+
+    // 🔥 pool-level error handling
+    (pool as any).on('error', (err: any) => {
+      console.error('[db] pool error:', err.code);
+    });
+
+    g[GLOBAL_KEY] = pool;
+
+    // 🔥 KEEP-ALIVE (important for WAMP / local / idle fix)
+    setInterval(async () => {
+      try {
+        await pool.query('SELECT 1');
+        // console.log('[db] keep-alive ping');
+      } catch (err) {
+        console.error('[db] keep-alive failed');
+      }
+    }, 30000);
   }
 
   return g[GLOBAL_KEY];
 }
 
-// ─── Public pool export ───────────────────────────────────────────────────────
+// ─── SAFE QUERY (🔥 MAIN FIX) ─────────────────────────
 
-/**
- * Use `db` anywhere you need the pool:
- *   const [rows] = await db.query('SELECT 1');
- */
-const db: mysql.Pool = new Proxy({} as mysql.Pool, {
-  get(_target, prop) {
-    // During Next.js build, env vars may be absent — fail gracefully
-    if (!process.env.DB_HOST) {
-      if (prop === 'query' || prop === 'execute') {
-        return async () => {
-          throw new Error('[db] Database environment variables are not set.');
-        };
-      }
-      return undefined;
+async function safeQuery<T = any>(
+  query: string,
+  values?: any[]
+): Promise<[T, any]> {
+  const pool = getPool();
+
+  try {
+    return (await pool.query(query, values)) as [T, any];
+  } catch (err: any) {
+    console.error('[db] query error:', err.code);
+
+    // 🔁 retry on connection errors
+    if (
+      err.code === 'ECONNRESET' ||
+      err.code === 'PROTOCOL_CONNECTION_LOST' ||
+      err.code === 'ETIMEDOUT'
+    ) {
+      console.log('[db] retrying query...');
+      return (await pool.query(query, values)) as [T, any];
     }
 
-    const pool = getPool();
-    const value = (pool as unknown as Record<string | symbol, unknown>)[prop];
-    return typeof value === 'function' ? value.bind(pool) : value;
-  },
-});
+    throw err;
+  }
+}
+
+// ─── Public Export ─────────────────────────────────────
+
+const db = {
+  query: safeQuery,
+  execute: safeQuery,
+};
 
 export default db;
