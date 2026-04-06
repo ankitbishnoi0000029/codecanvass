@@ -1,24 +1,19 @@
 import mysql from 'mysql2/promise';
 
-// Load env vars for non-Next.js contexts
 if (!process.env.DB_HOST) {
   try {
     require('dotenv').config({ path: '.env.local' });
   } catch {}
 }
 
-// ─── Types ─────────────────────────────────────────────
-
 export interface DbPool extends mysql.Pool {}
-
-// ─── Config ────────────────────────────────────────────
 
 function getPoolConfig(): mysql.PoolOptions {
   const { DB_HOST, DB_USER, DB_PASSWORD, DB_SCHEMA, DB_PORT } = process.env;
 
   if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_SCHEMA) {
     throw new Error(
-      `Missing DB env vars. DB_HOST=${DB_HOST}, DB_USER=${DB_USER}, DB_SCHEMA=${DB_SCHEMA}`
+      `Missing required DB env vars. DB_HOST=${DB_HOST}, DB_USER=${DB_USER}, DB_SCHEMA=${DB_SCHEMA}`
     );
   }
 
@@ -30,102 +25,90 @@ function getPoolConfig(): mysql.PoolOptions {
     port: Number(DB_PORT) || 3306,
 
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
 
-    connectTimeout: 10000,
+    // ✅ VERCEL KE LIYE SABSE IMPORTANT
+    // Har serverless function sirf 1 connection use kare
+    // 5 rakha toh = disaster (50 concurrent users = 250 connections = Hostinger ban)
+    connectionLimit: 1,
+    queueLimit: 10,
 
-    // 🔥 IMPROVED
+    connectTimeout: 8_000,
+    idleTimeout: 20_000,    // Hostinger ka wait_timeout usually 28800s hai
+                             // lekin serverless mein 20s rakhna safe hai
+
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
-
-    idleTimeout: 30000,
 
     namedPlaceholders: true,
   };
 }
 
-// ─── Singleton ─────────────────────────────────────────
-
 const GLOBAL_KEY = Symbol.for('mysql2.pool');
-
-type GlobalWithPool = typeof globalThis & {
-  [GLOBAL_KEY]?: mysql.Pool;
-};
+type GlobalWithPool = typeof globalThis & { [GLOBAL_KEY]?: mysql.Pool };
 
 function getPool(): mysql.Pool {
   const g = globalThis as GlobalWithPool;
 
   if (!g[GLOBAL_KEY]) {
-    const pool = mysql.createPool(getPoolConfig());
+    g[GLOBAL_KEY] = mysql.createPool(getPoolConfig());
 
-    // 🔥 connection-level error handling
-    pool.on('connection', (conn) => {
+    g[GLOBAL_KEY].on('connection', (conn) => {
       conn.on('error', (err) => {
-        console.error('[db] connection error:', err.code);
-
         if (
+          err.code === 'ECONNRESET' ||
           err.code === 'PROTOCOL_CONNECTION_LOST' ||
-          err.code === 'ECONNRESET'
+          err.code === 'ECONNREFUSED'
         ) {
-          console.log('[db] connection lost, will auto-recover via pool');
+          return; // silently ignore — pool recover kar lega
         }
+        console.error('[db] unexpected error:', err.code, err.message);
       });
     });
-
-    // 🔥 pool-level error handling
-    (pool as any).on('error', (err: any) => {
-      console.error('[db] pool error:', err.code);
-    });
-
-    g[GLOBAL_KEY] = pool;
-
-    // 🔥 KEEP-ALIVE (important for WAMP / local / idle fix)
-    setInterval(async () => {
-      try {
-        await pool.query('SELECT 1');
-        // console.log('[db] keep-alive ping');
-      } catch (err) {
-        console.error('[db] keep-alive failed');
-      }
-    }, 30000);
   }
 
   return g[GLOBAL_KEY];
 }
 
-// ─── SAFE QUERY (🔥 MAIN FIX) ─────────────────────────
-
-async function safeQuery<T = any>(
-  query: string,
-  values?: any[]
-): Promise<[T, any]> {
+async function executeWithRetry<T>(
+  fn: (pool: mysql.Pool) => Promise<T>,
+  retries = 2
+): Promise<T> {
   const pool = getPool();
-
   try {
-    return (await pool.query(query, values)) as [T, any];
+    return await fn(pool);
   } catch (err: any) {
-    console.error('[db] query error:', err.code);
-
-    // 🔁 retry on connection errors
     if (
-      err.code === 'ECONNRESET' ||
-      err.code === 'PROTOCOL_CONNECTION_LOST' ||
-      err.code === 'ETIMEDOUT'
+      retries > 0 &&
+      (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST')
     ) {
-      console.log('[db] retrying query...');
-      return (await pool.query(query, values)) as [T, any];
+      await new Promise(r => setTimeout(r, 150));
+      return executeWithRetry(fn, retries - 1);
     }
-
     throw err;
   }
 }
 
-// ─── Public Export ─────────────────────────────────────
+const ddb: mysql.Pool = new Proxy({} as mysql.Pool, {
+  get(_target, prop) {
+    if (!process.env.DB_HOST) {
+      if (prop === 'query' || prop === 'execute') {
+        return async () => {
+          throw new Error('[db] Database environment variables are not set.');
+        };
+      }
+      return undefined;
+    }
 
-const db = {
-  query: safeQuery,
-  execute: safeQuery,
-};
+    const pool = getPool();
 
-export default db;
+    if (prop === 'query' || prop === 'execute') {
+      return (...args: any[]) =>
+        executeWithRetry((p) => (p[prop] as Function)(...args));
+    }
+
+    const value = (pool as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === 'function' ? value.bind(pool) : value;
+  },
+});
+
+export default ddb;
