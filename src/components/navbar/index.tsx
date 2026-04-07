@@ -36,9 +36,7 @@ export function Navbar() {
         }`}
       >
         <nav className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          
           <div className="flex items-center justify-between">
-            
             {/* LOGO */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center gap-2 group">
@@ -50,9 +48,7 @@ export function Navbar() {
                   <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
                     AI ONLINE TOOLS
                   </span>
-                  <span className="text-[10px] text-gray-500">
-                    Power Your Code with AI Tools
-                  </span>
+                  <span className="text-[10px] text-gray-500">Power Your Code with AI Tools</span>
                 </div>
               </Link>
             </div>
@@ -85,11 +81,7 @@ export function Navbar() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-2 rounded-md text-gray-700 hover:bg-purple-50 transition"
             >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </nav>
@@ -97,9 +89,7 @@ export function Navbar() {
         {/* MOBILE MENU */}
         <div
           className={`lg:hidden transition-all duration-300 ${
-            isMobileMenuOpen
-              ? 'max-h-[500px] opacity-100'
-              : 'max-h-0 opacity-0 overflow-hidden'
+            isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
           }`}
         >
           <div className="px-4 py-3 space-y-2 bg-white border-t">
@@ -118,7 +108,7 @@ export function Navbar() {
       </header>
 
       {/* BODY OFFSET */}
-      <div className="h-16" />
+      <div className="h-12" />
     </>
   );
 }

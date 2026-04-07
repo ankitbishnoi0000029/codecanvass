@@ -70,11 +70,13 @@ export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[]
   return (
     <>
       <div
-        className={`fixed left-0 right-0 z-40 transition-all duration-500 w-screen ${
+      
+        className={`fixed left-0 right-0 z-40 transition-all duration-500 max-w-fit flex justify-center-safe ${
           isScrolled
             ? "top-[5px] bg-white shadow-md border-b border-gray-200"
             : "top-[50px] bg-white/80 backdrop-blur-md border-b border-white/40"
         }`}
+        style={{ justifySelf: "center" }}
       >
         {/* ── Mobile Toggle ── */}
         <div className="lg:hidden flex justify-between items-center px-4 py-2">

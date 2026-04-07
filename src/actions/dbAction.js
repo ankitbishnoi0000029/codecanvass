@@ -86,16 +86,12 @@ export async function getPageContent(table, url_id) {
   };
 }
 export async function getNewPageContent(url_id) {
-  const [rows] = await ddb.query(
-    `SELECT * FROM posts WHERE url_id = ? LIMIT 1`,
-    [url_id]
-  );
+  const [rows] = await ddb.query(`SELECT * FROM posts WHERE url_id = ? LIMIT 1`, [url_id]);
   const data = rows[0] || null;
   return {
-  data
+    data,
   };
 }
-
 
 export async function UpdatePageContent(table, url_id, data) {
   const { urlName, route, des, bottom_des, keyword, faq, code, content } = data;
@@ -313,7 +309,6 @@ export async function subscribe(email) {
   }
 }
 
-
 export async function insertPost(page_tbl, url_id, data) {
   console.log('page_tbl => ', page_tbl);
   console.log('url_id => ', url_id);
@@ -348,7 +343,7 @@ export async function insertPost(page_tbl, url_id, data) {
       twitterCard,
       canonicalUrl,
     } = data;
-console.log('Data received in insertPost => ', data);
+    console.log('Data received in insertPost => ', data);
     // ── VALIDATE ──────────────────────────────────────────
     if (!title?.trim()) throw new Error('Title is required');
     if (!url_id?.trim()) throw new Error('URL ID is required');
@@ -432,7 +427,7 @@ console.log('Data received in insertPost => ', data);
     } else {
       // ── INSERT ───────────────────────────────────────────
       const [result] = await ddb.query(
-  `INSERT INTO posts
+        `INSERT INTO posts
     (title,description,faqs,page_tbl,url_id, content, excerpt, slug, status, visibility,
      password, publish_date, featured_image, allow_comments,
      allow_pingbacks, seo_title, seo_description, seo_keywords,
@@ -445,40 +440,40 @@ console.log('Data received in insertPost => ', data);
      ?, ?, ?, ?,
      ?, ?, ?, ?, ?,
      ?, ?, ?, ?,
-     ?, ?, ?, NOW(), NOW())`,  // ✅ yaha 3 ? hone chahiye
-  [
-    title,
-    description || '',
-    faqs ? JSON.stringify(faqs) : null,
-    page_tbl || 'posts',
-    url_id || null,
-    content || null,
-    excerpt || null,
-    slug,
-    status || 'draft',
-    visibility || 'public',
-    password || null,
-    publishDate || null,
-    featuredImage || null,
-    allowComments ? 1 : 0,
-    allowPingbacks ? 1 : 0,
-    seoTitle || null,
-    seoDescription || null,
-    seoKeywords || null,
-    wordCount || 0,
-    charCount || 0,
-    readingTime || 1,
-    format || 'standard',
-    author || 'Admin',
-    template || 'default',
-    ogTitle || null,
-    ogDescription || null,
-    ogImage || null,
-    twitterCard || 'summary_large_image',
-    canonicalUrl || null,
-    tags ? JSON.stringify(tags) : null,
-  ]
-);
+     ?, ?, ?, NOW(), NOW())`, // ✅ yaha 3 ? hone chahiye
+        [
+          title,
+          description || '',
+          faqs ? JSON.stringify(faqs) : null,
+          page_tbl || 'posts',
+          url_id || null,
+          content || null,
+          excerpt || null,
+          slug,
+          status || 'draft',
+          visibility || 'public',
+          password || null,
+          publishDate || null,
+          featuredImage || null,
+          allowComments ? 1 : 0,
+          allowPingbacks ? 1 : 0,
+          seoTitle || null,
+          seoDescription || null,
+          seoKeywords || null,
+          wordCount || 0,
+          charCount || 0,
+          readingTime || 1,
+          format || 'standard',
+          author || 'Admin',
+          template || 'default',
+          ogTitle || null,
+          ogDescription || null,
+          ogImage || null,
+          twitterCard || 'summary_large_image',
+          canonicalUrl || null,
+          tags ? JSON.stringify(tags) : null,
+        ]
+      );
 
       return {
         success: true,
@@ -495,4 +490,3 @@ console.log('Data received in insertPost => ', data);
     };
   }
 }
-

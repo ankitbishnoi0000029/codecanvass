@@ -8,6 +8,7 @@ import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 import { PageTitle } from "./title"
 import { usePathname, useRouter } from "next/navigation"
+import { LoadingComponent } from "../ui/loading"
 
 // Helper function to convert image formats
 const convertImageFormat = async (file: File, targetFormat: string): Promise<string> => {
@@ -80,7 +81,7 @@ export function ImageTools() {
   const [isConverting, setIsConverting] = useState(false)
   const [list, setList] = useState<dataType[]>([])
   const [previewUrl, setPreviewUrl] = useState<string>("")
-
+const [pageLoading, setPageLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname()
 
@@ -117,6 +118,7 @@ export function ImageTools() {
     }
 
     fetchData()
+    setPageLoading(false);
   }, [pathname]) // ✅ Re-run when pathname changes so browser back/forward works
 
   const converterOptions: SidebarOption[] =
@@ -138,6 +140,7 @@ export function ImageTools() {
   ]
 
   const handleToolChange = (optionId: string | number) => {
+    setPageLoading(true);
     const id = optionId.toString()
     setSelectedTool(id)
     setInputFile(null)
@@ -229,6 +232,8 @@ export function ImageTools() {
   }
 
   return (
+    <>
+    {pageLoading ?  <LoadingComponent /> : (
     <ReusableSidebar
       title="Image Tools"
       icon={Palette}
@@ -339,6 +344,8 @@ export function ImageTools() {
         )}
       </SidebarContentWrapper>
     </ReusableSidebar>
+    )}
+    </>
   )
 }
 

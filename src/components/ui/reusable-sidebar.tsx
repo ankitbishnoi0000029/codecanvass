@@ -1,42 +1,42 @@
-"use client"
+'use client';
 
-import { ReactNode } from "react"
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarFooter, 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
-  SidebarHeader, 
-  SidebarInset, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
-  SidebarProvider, 
-  SidebarTrigger 
-} from "@/components/ui/sidebar"
-import { LucideIcon } from "lucide-react"
+import { ReactNode } from 'react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { LucideIcon } from 'lucide-react';
 
 export interface SidebarOption {
-  id: string
-  label: string
-  icon: LucideIcon
-  description?: string
-  keyword? : string
-  onClick?: () => void
-  urlName ? : string
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  description?: string;
+  keyword?: string;
+  onClick?: () => void;
+  urlName?: string;
 }
 
 export interface ReusableSidebarProps {
-  title: string
-  icon: LucideIcon
-  options: SidebarOption[]
-  selectedOption: string
-  onOptionSelect: (optionId: string) => void
-  footerOptions?: SidebarOption[]
-  children: ReactNode
-  className?: string
+  title: string;
+  icon: LucideIcon;
+  options: SidebarOption[];
+  selectedOption: string;
+  onOptionSelect: (optionId: string) => void;
+  footerOptions?: SidebarOption[];
+  children: ReactNode;
+  className?: string;
 }
 
 export function ReusableSidebar({
@@ -47,9 +47,9 @@ export function ReusableSidebar({
   onOptionSelect,
   footerOptions = [],
   children,
-  className = ""
+  className = '',
 }: ReusableSidebarProps) {
-  console.log(selectedOption)
+  console.log(selectedOption);
   return (
     <SidebarProvider>
       <div className={`flex w-screen ${className}`}>
@@ -60,21 +60,21 @@ export function ReusableSidebar({
               <span className="font-bold ">{title}</span>
             </div>
           </SidebarHeader>
-          
+
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Options</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {options.map((option) => {
-                    const OptionIcon = option.icon
+                    const OptionIcon = option.icon;
                     return (
                       <SidebarMenuItem key={option.id}>
                         <SidebarMenuButton
                           isActive={selectedOption === option.id}
                           onClick={() => {
-                            onOptionSelect(option.id)
-                            option.onClick?.()
+                            onOptionSelect(option.id);
+                            option.onClick?.();
                           }}
                           className={`w-full justify-start uppercase cursor-pointer ${selectedOption == option.id ? 'bg-blue-700 font-extrabold ' : ''}`}
                         >
@@ -82,18 +82,18 @@ export function ReusableSidebar({
                           <span>{option.label}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    )
+                    );
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          
+
           {footerOptions.length > 0 && (
             <SidebarFooter>
               <SidebarMenu>
                 {footerOptions.map((option) => {
-                  const OptionIcon = option.icon
+                  const OptionIcon = option.icon;
                   return (
                     <SidebarMenuItem key={option.id}>
                       <SidebarMenuButton
@@ -104,44 +104,45 @@ export function ReusableSidebar({
                         <span>{option.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  )
+                  );
                 })}
               </SidebarMenu>
             </SidebarFooter>
           )}
         </Sidebar>
-        
-        <SidebarInset>
-          {children}
-        </SidebarInset>
+
+        <SidebarInset>{children}</SidebarInset>
       </div>
     </SidebarProvider>
-  )
+  );
 }
 
 export interface SidebarContentProps {
-  selectedOption: SidebarOption | undefined
-  children?: ReactNode
-  className?: string
+  selectedOption: SidebarOption | undefined;
+  children?: ReactNode;
+  className?: string;
 }
 
-export function SidebarContentWrapper({ 
-  selectedOption, 
-  children, 
-  className = "" 
+export function SidebarContentWrapper({
+  selectedOption,
+  children,
+  className = '',
 }: SidebarContentProps) {
   return (
-    <div className={`flex w-full pt-6 flex-col ${className}`}>
-      <div className="flex h-16 items-center gap-2 border-b px-4">
-        <SidebarTrigger />
-        <h1 className="text-lg font-bold uppercase">
-          {selectedOption?.label || selectedOption?.urlName}
-        </h1>
+    <div className={`flex w-full pt-8 border-t-2 border-amber-800 top-2 flex-col ${className}`}>
+      {/* HEADER */}
+      <div className="flex h-18 items-center justify-between gap-3 border-b px-5">
+        <div className="flex items-center gap-3">
+          <SidebarTrigger />
+
+          <h1 className="text-3xl font-extrabold uppercase tracking-wide">
+            {selectedOption?.label || selectedOption?.urlName}
+          </h1>
+        </div>
       </div>
-      
-      <div className="flex-1 p-6">
-        {children}
-      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="flex-1 p-6 ">{children}</div>
     </div>
-  )
+  );
 }

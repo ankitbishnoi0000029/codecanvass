@@ -31,7 +31,6 @@ export function SqlConverter() {
     };
     fetchData();
   }, []);
-console.log('SQL Converters List:', list);
   // Get slug from URL
   useEffect(() => {
     const slug = pathname.split('/').pop() ?? '';
