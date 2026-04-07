@@ -999,7 +999,6 @@ console.log(featuredImage)
               </div>
             </div>
           </div>
-
           {/* Custom Fields */}
           <div className={`${t.card} border ${t.border} shadow-sm rounded-xl overflow-hidden`}>
             <div className={`px-4 py-2.5 border-b ${t.border} ${t.panelHeader} flex items-center justify-between`}>
