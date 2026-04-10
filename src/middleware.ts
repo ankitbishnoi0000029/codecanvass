@@ -10,17 +10,18 @@ export async function middleware(request: NextRequest) {
 
     const isAdminRoute = pathname.startsWith("/adminPanel")
     const isLoginPage = pathname.startsWith("/login")
+
     // 🔐 Protect only admin routes
     if (isAdminRoute) {
         if (!token) {
-            return NextResponse.redirect(new URL("/login", request.url))
+            return NextResponse.redirect(new URL("/login", request.url), 308)
         }
 
         try {
             await jwtVerify(token, secret)
             return NextResponse.next()
         } catch {
-            const response = NextResponse.redirect(new URL("/login", request.url))
+            const response = NextResponse.redirect(new URL("/login", request.url), 308)
             response.cookies.delete("token")
             return response
         }
@@ -30,13 +31,12 @@ export async function middleware(request: NextRequest) {
     if (isLoginPage && token) {
         try {
             await jwtVerify(token, secret)
-            return NextResponse.redirect(new URL("/adminPanel", request.url))
+            return NextResponse.redirect(new URL("/adminPanel", request.url), 308)
         } catch {
             return NextResponse.next()
         }
     }
 
-    // ✅ Allow all other routes normally
     return NextResponse.next()
 }
 
