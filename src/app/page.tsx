@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   category: 'technology',
 
   alternates: {
-    canonical: `https://www.aionlinetoolss.com/`,
+    canonical: `https://aionlinetoolss.com/`,
   },
 
   robots: {
