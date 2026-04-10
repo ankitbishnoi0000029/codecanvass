@@ -1,7 +1,7 @@
 import { getMetaCached } from "@/actions/dbAction";
 import CompresserPage from "@/components/sections/Compress/compresser";
 import { Metadata } from "next";
-
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ page: string }>;

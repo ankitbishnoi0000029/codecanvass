@@ -3,7 +3,7 @@ import ToolPage from "@/components/sections/pdf/toolpage";
 
 import type { Metadata } from "next"
 import { getMetaCached } from "@/actions/dbAction"
-
+export const dynamic = "force-dynamic";
 interface PageProps {
   params: Promise<{ page: string }>;
 }

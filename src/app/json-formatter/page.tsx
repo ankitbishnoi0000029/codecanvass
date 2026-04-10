@@ -1,7 +1,7 @@
 
 import JsonFormatterTool from "@/components/sections/jsonFormatter";
 import { getMetaCached } from "@/actions/dbAction"
-
+export const dynamic = "force-dynamic";
 export async function generateMetadata() {
 
   const data = await getMetaCached('json-formatter');

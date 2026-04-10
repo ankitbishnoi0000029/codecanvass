@@ -1,6 +1,6 @@
 import { getMetaCached } from "@/actions/dbAction"
 import BGRemover from "@/components/sections/bg-remove";
-
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(){
 

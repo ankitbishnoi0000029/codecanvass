@@ -1,7 +1,7 @@
 
 import { getMetaCached } from "@/actions/dbAction"
 import ToolHomePage from "@/components/sections/tool-page/tool-home";
-
+export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const data = await getMetaCached('popular');
   return {

@@ -1,6 +1,6 @@
 import { getMetaCached } from "@/actions/dbAction";
 import CompressorHub from "@/components/sections/Compress/Compress";
-
+export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
   
 

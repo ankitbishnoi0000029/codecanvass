@@ -2,7 +2,7 @@
 import { getMetaCached } from "@/actions/dbAction"
 import { XmlFormatterPage } from "@/components/sections/xmlFormatter";
 
-
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   

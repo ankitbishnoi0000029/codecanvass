@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 interface PageProps {
   params: Promise<{ page: string }>
 }
-
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { page } = await params;

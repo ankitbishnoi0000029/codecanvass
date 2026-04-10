@@ -1,7 +1,7 @@
 import { getMetaCached } from "@/actions/dbAction";
 import { HtmlConverters } from "@/components/sections/html-converters";
 import type { Metadata } from "next";
-
+export const dynamic = 'force-dynamic';
 interface PageProps {
   params: Promise<{ page: string }>
 }

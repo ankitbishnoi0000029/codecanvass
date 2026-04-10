@@ -2,7 +2,7 @@
 import { getMetaCached } from "@/actions/dbAction"
 import { QRGenerator } from "@/components/sections/qrGenerator";
 
-
+export const dynamic = "force-dynamic";
 export async function generateMetadata() {
 
   const data = await getMetaCached('qr-generator');

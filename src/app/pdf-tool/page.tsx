@@ -1,7 +1,7 @@
 import PDFToolApp from "@/components/sections/pdftool";
 import { getMetaCached } from "@/actions/dbAction"
 
-
+export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const data = await getMetaCached('pdf-tool');
   return {

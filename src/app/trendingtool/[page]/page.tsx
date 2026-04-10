@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Trandingtool } from "@/components/sections/trandingtool";
 import { getMetaCached } from "@/actions/dbAction";
-
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ page: string }>

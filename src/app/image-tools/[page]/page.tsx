@@ -2,7 +2,7 @@ import { ImageTools } from "@/components/sections/image-tools"
 import type { Metadata } from "next";
 import { getMetaCached } from "@/actions/dbAction";
 
-
+export const dynamic = 'force-dynamic';
 interface PageProps {
   params: Promise<{ page: string }>
 }

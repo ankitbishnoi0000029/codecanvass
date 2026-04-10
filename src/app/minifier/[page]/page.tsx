@@ -2,7 +2,7 @@
 import { getMetaCached } from "@/actions/dbAction";
 import { Minifier } from "@/components/sections/minifier";
 import type { Metadata } from "next";
-
+export const dynamic = "force-dynamic";
 interface PageProps {
   params: Promise<{ page: string }>
 }

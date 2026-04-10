@@ -2,7 +2,7 @@
 import { getMetaCached } from "@/actions/dbAction";
 import { JsonConverters } from "@/components/sections/json-converters";
 import type { Metadata } from "next";
-
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ page: string }>
