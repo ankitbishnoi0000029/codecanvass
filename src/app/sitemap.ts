@@ -1,40 +1,66 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://aionlinetoolss.com";
+  const baseUrl = "https://aionlinetoolss.com"; // ✅ single version use
 
   const routes = [
+    // core pages
     "",
-    "/backgroundremover",
-    "/videodownloder",
+    "/contact",
     "/blog",
+    "/disclaimer",
+    "/qr-generator",
+    "/bg-remove",
+    "/xml-formatter",
+    "/gbl-gltf-compress",
+    "/pdf-tool",
 
-    "/sql-converters/sql-to-csv",
-    "/sql-converters/sql-to-json",
-    "/sql-converters/sql-to-xml",
-    "/sql-converters/sql-to-yaml",
-    "/sql-converters/sql-to-html",
+    // html tools
+    "/html-converters/html-stripper",
+    "/html-converters/html-to-markdown",
+    "/html-converters/markdown-to-html",
 
-    "/encode-decode/base64-encode",
-    "/encode-decode/base64-decode",
+    // json tools
+    "/json-formatter",
+    "/json-converters/json-to-tsv",
+    "/json-converters/json-to-csv",
 
-    "/base64-tools/image-to-base64",
-    "/base64-tools/base64-to-image",
-
-    "/json-converters/json-to-xml",
-    "/xml-converters/xml-to-json",
-
-    "/minifier/json-minify",
-    "/minifier/js-minify",
-
+    // popular
+    "/popular/css-beautifier",
+    "/popular/hex-to-pantone",
+    "/popular/source-code-viewer",
+    "/popular/javascript-validator",
     "/popular/number-to-words",
+    "/popular/hex-to-decimal",
+    "/popular/rem-to-px-converter",
+    "/popular/excel-to-html",
+    "/popular/decimal-to-hex",
+    "/popular/binary-to-decimal",
+    "/popular/ascii-to-text",
+    "/popular/css-validator",
 
-    "/pdf-tool/",
-    "/pdf-tool/mergepdf",
-    "/pdf-tool/splitPDF",
+    // trending tools
+    "/trendingtool/php-formatter",
+    "/trendingtool/paraphrasing-tool",
+    "/trendingtool/number-utilities",
+    "/trendingtool/sha512-hash",
+    "/trendingtool/image-to-ascii-art",
+    "/trendingtool/word-to-html",
+    "/trendingtool/lua-beautifier",
+    "/trendingtool/html-stripper",
+    "/trendingtool/mirror-online",
+    "/trendingtool/lua-minifier",
+    "/trendingtool/csv-to-excel",
+    "/trendingtool/sha256-hash",
+    "/trendingtool/bitwise-calculation",
+    "/trendingtool/excel-viewer",
+    "/trendingtool/wordpress-password-hash",
   ];
 
-  return routes.map((route) => ({
+  // remove duplicates
+  const uniqueRoutes = [...new Set(routes)];
+
+  return uniqueRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: "daily",
