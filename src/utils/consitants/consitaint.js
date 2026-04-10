@@ -528,6 +528,7 @@ export const category = [
 export const categories = [
   { id: 'home', name: 'Home Page', icon: "Sparkles" },
   { id: 'popular', name: 'Popular Tools', icon: "TrendingUp" },
+  { id: 'compress', name: 'Compress Tools', icon: "Search" },
   { id: 'navbar', name: 'Navbar', icon: "SiNaver" },
   { id: 'trendingtools', name: 'Trending Tools', icon: "Sparkles" },
   { id: 'encode_decode', name: 'Encode / Decode', icon: "Shield" },
@@ -538,6 +539,7 @@ export const categories = [
   { id: 'yaml_converters', name: 'YAML Converters', icon: "FileText" },
   { id: 'sql_converters', name: 'SQL Converters', icon: "Database" },
   { id: 'image_tools', name: 'Image Tools', icon: "Image" },
+  { id: 'minifier', name: 'Minifier', icon: "Tool" },
   { id: 'nf', name: 'New Features', icon: "Sparkles" },
   { id: 'pdf', name: 'PDF Tools', icon: "PDF" },
 ];
@@ -1690,3 +1692,98 @@ export const SPEC_CATS = {
   "Greek": ["&alpha;","&beta;","&gamma;","&delta;","&epsilon;","&zeta;","&eta;","&theta;","&iota;","&kappa;","&lambda;","&mu;","&nu;","&xi;","&pi;","&rho;","&sigma;","&tau;","&upsilon;","&phi;","&chi;","&psi;","&omega;"],
   "Arrows": ["&larr;","&rarr;","&uarr;","&darr;","&harr;","&lArr;","&rArr;","&uArr;","&dArr;","&hArr;","&crarr;"],
 };
+
+
+export const categoriesHub = [
+  {
+    id: 'image', label: 'Image', icon: '🖼️', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20',
+    tools: [
+      { id: 'png',      name: 'PNG Compressor',        description: 'Losslessly shrink PNG files.',        tags: ['png','lossless'],  popular: true },
+      { id: 'jpg',      name: 'JPG Compressor',        description: 'Reduce JPG sizes.',                   tags: ['jpg','jpeg'],       popular: true },
+      { id: 'jpeg',     name: 'JPEG Compressor',       description: 'Optimise JPEG for web.',              tags: ['jpeg','image'] },
+      { id: 'webp',     name: 'WebP Compressor',       description: 'Compress WebP images.',               tags: ['webp','image'],     isNew: true },
+      { id: 'gif',      name: 'GIF Compressor',        description: 'Reduce animated GIF sizes.',          tags: ['gif','animated'] },
+      { id: 'svg',      name: 'SVG Compressor',        description: 'Minify SVG vector files.',            tags: ['svg','vector'] },
+      { id: 'avif',     name: 'AVIF Compressor',       description: 'Compress AVIF images.',               tags: ['avif'],            isNew: true },
+      { id: 'bmp',      name: 'BMP Compressor',        description: 'Compress legacy BMP bitmaps.',        tags: ['bmp','bitmap'] },
+      { id: 'tiff',     name: 'TIFF Compressor',       description: 'Reduce TIFF file sizes.',             tags: ['tiff','print'] },
+      { id: 'ico',      name: 'ICO Compressor',        description: 'Compress favicon ICO files.',         tags: ['ico','favicon'] },
+      { id: 'heic',     name: 'HEIC Compressor',       description: 'Compress Apple HEIC photos.',         tags: ['heic','apple'] },
+      { id: 'psd',      name: 'PSD Compressor',        description: 'Reduce Photoshop PSD sizes.',         tags: ['psd','photoshop'] },
+      { id: 'bulk-img', name: 'Bulk Image Compressor', description: 'Compress many images at once.',       tags: ['bulk','batch'],    popular: true },
+      { id: 'res-img',  name: 'Resolution Compressor', description: 'Downscale image resolution.',         tags: ['resolution','resize'] },
+    ],
+  },
+  {
+    id: 'video', label: 'Video', icon: '🎥', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20',
+    tools: [
+      { id: 'mp4',   name: 'MP4 Compressor',      description: 'Compress MP4 videos.',          tags: ['mp4','video'],  popular: true },
+      { id: 'mov',   name: 'MOV Compressor',      description: 'Reduce Apple MOV sizes.',       tags: ['mov','apple'] },
+      { id: 'avi',   name: 'AVI Compressor',      description: 'Compress AVI video files.',     tags: ['avi','legacy'] },
+      { id: 'mkv',   name: 'MKV Compressor',      description: 'Compress MKV containers.',      tags: ['mkv','video'] },
+      { id: 'webm',  name: 'WebM Compressor',     description: 'Compress WebM videos.',         tags: ['webm','web'] },
+      { id: '4k',    name: '4K Compressor',       description: 'Compress ultra-HD 4K footage.', tags: ['4k','uhd'],     popular: true },
+      { id: 'hd',    name: 'HD Compressor',       description: 'Reduce 1080p/720p sizes.',      tags: ['hd','1080p'] },
+      { id: 'yt',    name: 'YouTube Compressor',  description: 'Compress for YouTube.',         tags: ['youtube','video'] },
+    ],
+  },
+  {
+    id: 'audio', label: 'Audio', icon: '🎵', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20',
+    tools: [
+      { id: 'mp3',  name: 'MP3 Compressor',  description: 'Reduce MP3 file sizes.',     tags: ['mp3','audio'],   popular: true },
+      { id: 'wav',  name: 'WAV Compressor',  description: 'Resample & shrink WAV.',     tags: ['wav','audio'] },
+      { id: 'aac',  name: 'AAC Compressor',  description: 'Optimise AAC audio.',        tags: ['aac','audio'] },
+      { id: 'ogg',  name: 'OGG Compressor',  description: 'Compress OGG Vorbis.',       tags: ['ogg','audio'] },
+      { id: 'flac', name: 'FLAC Compressor', description: 'Reduce FLAC sizes.',         tags: ['flac','audio'] },
+      { id: 'm4a',  name: 'M4A Compressor',  description: 'Compress Apple M4A.',        tags: ['m4a','apple'] },
+    ],
+  },
+  {
+    id: 'document', label: 'Document', icon: '📄', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20',
+    tools: [
+      { id: 'pdf',      name: 'PDF Compressor',   description: 'Compress PDF files (page-render method).',  tags: ['pdf'],         popular: true },
+      { id: 'docx',     name: 'DOCX Compressor',  description: 'Compress Word documents.',                  tags: ['docx','word'], popular: true },
+      { id: 'xlsx',     name: 'XLSX Compressor',  description: 'Compress Excel spreadsheets.',              tags: ['xlsx','excel'] },
+      { id: 'pptx-doc', name: 'PPTX Compressor',  description: 'Compress PowerPoint files.',                tags: ['pptx','slides'] },
+      { id: 'epub',     name: 'EPUB Compressor',  description: 'Compress eBook EPUB files.',                tags: ['epub','ebook'] },
+      { id: 'txt',      name: 'TXT Compressor',   description: 'Gzip-compress text files.',                 tags: ['txt','text'] },
+    ],
+  },
+  {
+    id: 'archive', label: 'Archive', icon: '📦', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20',
+    tools: [
+      { id: 'zip',    name: 'ZIP Compressor',    description: 'Re-compress ZIP at DEFLATE level 9.',     tags: ['zip'],          popular: true },
+      { id: 'rar',    name: 'RAR Compressor',    description: 'Gzip-wrap RAR archives.',                 tags: ['rar'],          popular: true },
+      { id: '7z',     name: '7Z Compressor',     description: 'Gzip-wrap 7-Zip archives.',               tags: ['7z','archive'] },
+      { id: 'tar',    name: 'TAR Compressor',    description: 'Gzip-compress TAR bundles.',              tags: ['tar','unix'] },
+      { id: 'gz',     name: 'GZ Compressor',     description: 'GZIP compress any file.',                 tags: ['gzip','gz'] },
+      { id: 'folder', name: 'Folder → ZIP',      description: 'Pack entire folder into compressed ZIP.', tags: ['folder'],       popular: true },
+    ],
+  },
+  {
+    id: 'developer', label: 'Developer', icon: '💻', color: 'text-lime-400', bg: 'bg-lime-500/10 border-lime-500/20',
+    tools: [
+      { id: 'html-min', name: 'HTML Minifier',         description: 'Strip whitespace from HTML.',  tags: ['html','minify'],  popular: true },
+      { id: 'css-min',  name: 'CSS Minifier',          description: 'Minify CSS stylesheets.',      tags: ['css','minify'],   popular: true },
+      { id: 'js-min',   name: 'JS Minifier',           description: 'Minify JavaScript bundles.',   tags: ['js','minify'],    popular: true },
+      { id: 'json-min', name: 'JSON Minifier',         description: 'Compact JSON data.',           tags: ['json','minify'] },
+      { id: 'xml-min',  name: 'XML Minifier',          description: 'Minify XML markup.',           tags: ['xml','minify'] },
+      { id: 'sql-min',  name: 'SQL Compressor',        description: 'Minify SQL queries.',          tags: ['sql'] },
+      { id: 'ts-min',   name: 'TypeScript Compressor', description: 'Compress TS/TSX files.',       tags: ['ts','typescript'] },
+      { id: 'php-min',  name: 'PHP Compressor',        description: 'Minify PHP source.',           tags: ['php'] },
+      { id: 'py-min',   name: 'Python Compressor',     description: 'Minify Python scripts.',       tags: ['python','py'] },
+      { id: 'yaml-min', name: 'YAML Compressor',       description: 'Compress YAML config.',        tags: ['yaml'] },
+    ],
+  },
+  {
+    id: 'social', label: 'Social', icon: '📱', color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/20',
+    tools: [
+      { id: 'whatsapp',   name: 'WhatsApp Image',    description: 'Optimise images for WhatsApp.',  tags: ['whatsapp'],    popular: true },
+      { id: 'instagram',  name: 'Instagram Image',   description: 'Compress for Instagram.',        tags: ['instagram'] },
+      { id: 'facebook',   name: 'Facebook Image',    description: 'Optimise for Facebook.',         tags: ['facebook'] },
+      { id: 'tiktok',     name: 'TikTok Video',      description: 'Compress for TikTok.',           tags: ['tiktok'] },
+      { id: 'thumbnail',  name: 'Thumbnail',         description: 'Optimise video thumbnails.',     tags: ['thumbnail','youtube'] },
+      { id: 'screenshot', name: 'Screenshot',        description: 'Compress app screenshots.',      tags: ['screenshot'] },
+    ],
+  },
+];

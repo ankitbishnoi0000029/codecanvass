@@ -14,8 +14,9 @@ import { dataType } from '@/utils/types/uiTypes';
 import Meta from './meta';
 
 import { PageTitle } from './title';
+import ContentSection from '../ui/content';
 
-export function SqlConverter() {
+export function SqlConverter(data: any) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -166,7 +167,7 @@ ${Object.values(parsed)
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto">
-          <PageTitle selectedData={selectedData} />
+          <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -210,8 +211,7 @@ ${Object.values(parsed)
             </Button>
           </div>
         </div>
-
-        {selectedData && <Meta selectedData={selectedData} />}
+<ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

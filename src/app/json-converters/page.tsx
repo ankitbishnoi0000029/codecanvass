@@ -1,23 +1,19 @@
-import { JsonConverters } from "@/components/sections/json-converters";
-import type { Metadata } from "next";
-import { buildMetadata } from "@/utils/seo/metdata";
 
-interface PageProps {
-  params: Promise<{ tool: string }>
+import { getMetaCached } from "@/actions/dbAction"
+import ToolHomePage from "@/components/sections/tool-page/tool-home";
+
+export async function generateMetadata() {
+  const data = await getMetaCached('json-converters');
+  return {
+    title: data?.title || "Tools",
+    description: data?.description || "Free online tool.",
+    keywords: data?.keywords || "converter",
+    robots: "index, follow",
+  };
 }
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { tool } = await params;
-  return buildMetadata({
-    table: "html_converters",
-    urlId: tool,
-    route: `${tool}`,
-    fallbackTitle:       "XML Converters Online",
-    fallbackDescription: "Free online XML converters to process and convert XML data instantly.",
-    fallbackKeywords:    "xml converter, xml tools, xml editor, online xml tools",
-  });
+
+export default async function Page() {
+  const data = await getMetaCached('json-converters');;
+  return <ToolHomePage page='json_converters' title="JSON Converters" slug="json-converters" data={data?.pageData} />;
 }
-export default function jsonconvertersPage() {
-  return (
-    <JsonConverters />
-  );
-}
+  

@@ -1,46 +1,28 @@
-import { getNewPageContent } from "@/actions/dbAction";
+import { getMetaCached } from "@/actions/dbAction";
 import PopularTools from "@/components/sections/popular-tools";
-import { PageDataUI } from "@/utils/types/uiTypes";
+import { Metadata } from "next";
 
-// ✅ METADATA
-export async function generateMetadata({ params }: { params: Promise<{ page: string }> }) {
-  const { page } = await params; // ✅ FIX
+interface PageProps {
+  params: Promise<{ page: string }>
+}
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { page } = await params;
 
-  console.log("Generating metadata for page =>", page);
+  const data = await getMetaCached(page);
 
-  try {
-    const res = await getNewPageContent(page);
-    const data = res?.data || {};
-
-    return {
-      title: data.seo_title || data.title || "Default Title",
-      description: data.seo_description || "Default description",
-    };
-  } catch (err) {
-    console.error("Metadata error:", err);
-    return {
-      title: "Error",
-      description: "Error loading page",
-    };
-  }
+  return {
+    title: data?.title || "popular tool Converter Online",
+    description: data?.description || "Free online popular tool converter tool.",
+    keywords: data?.keywords || "popular converter",
+    robots: "index, follow",
+  };
 }
 
-// ✅ PAGE COMPONENT
-const Page = async ({ params }: { params: Promise<{ page: string }> }) => {
-  const { page } = await params; // ✅ FIX
+export default async function Page({ params }: PageProps) {
+  const { page } = await params;
 
-  let data : PageDataUI | null = null;
+  const data = await getMetaCached(page);
 
-  try {
-    const res = await getNewPageContent(page);
-    data = res?.data || null;
-
-    console.log("PAGE DATA:", data);
-  } catch (err) {
-    console.error("Page fetch error:", err);
-  }
-
-  return <PopularTools data = {data || {}} />;
-};
-
-export default Page;
+  return <PopularTools data={data.pageData} />;
+}
+  

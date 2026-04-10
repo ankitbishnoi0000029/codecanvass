@@ -13,8 +13,9 @@ import Meta from "./meta"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 import { useRouter, usePathname } from "next/navigation"
+import ContentSection from "../ui/content"
 
-export function Minifier() {
+export function Minifier(data: any) {
   const [converterOptions, setConverterOptions] = useState<SidebarOption[]>([])
   const [rawData, setRawData] = useState<dataType[]>([])
   const [selectedTool, setSelectedTool] = useState<string>("")
@@ -131,7 +132,7 @@ export function Minifier() {
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto">
-          <PageTitle selectedData={selectedOption} />
+          <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* INPUT */}
@@ -171,7 +172,7 @@ export function Minifier() {
             </Button>
           </div>
 
-          {selectedOption && <Meta selectedData={selectedOption} />}
+          <ContentSection data={data?.data} />
         </div>
       </SidebarContentWrapper>
     </ReusableSidebar>

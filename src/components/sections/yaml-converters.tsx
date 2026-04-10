@@ -14,6 +14,7 @@ import { useRouter, usePathname } from "next/navigation";
 import YAML from "yaml";
 import { PageTitle } from "./title";
 import Meta from "./meta";
+import ContentSection from "../ui/content";
 
 /* ============================= */
 /* FILE EXTENSIONS */
@@ -41,7 +42,7 @@ const getConverterName = (fullPath: string): string => {
 /* COMPONENT */
 /* ============================= */
 
-export function YamlConverters() {
+export function YamlConverters(data: any) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -205,7 +206,7 @@ export function YamlConverters() {
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto">
-          <PageTitle selectedData={selectedData} />
+          <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <textarea
@@ -250,7 +251,7 @@ export function YamlConverters() {
           </div>
         </div>
 
-        {selectedData && <Meta selectedData={selectedData} />}
+        <ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

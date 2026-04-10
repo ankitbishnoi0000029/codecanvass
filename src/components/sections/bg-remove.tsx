@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import React, { useRef, useState, useCallback, DragEvent, ChangeEvent } from 'react';
+import ContentSection from '../ui/content';
 
 type Stage = 'idle' | 'processing' | 'done' | 'error';
 
@@ -31,7 +32,7 @@ async function compositeOnBg(blob: Blob, bgCol: string): Promise<string> {
   return c.toDataURL('image/png');
 }
 
-export default function BGRemover() {
+export default function BGRemover({ data }: { data: any }) {
   const [stage, setStage] = useState<Stage>('idle');
   const [progress, setProgress] = useState(0);
   const [progMsg, setProgMsg] = useState('');
@@ -43,7 +44,7 @@ export default function BGRemover() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const resultBlob = useRef<Blob | null>(null);
-
+console.log("dayaaydsybdysbadbsdbusabu",data);
   // Re-composite when bg colour changes
   const applyBg = useCallback(async (col: string) => {
     if (!resultBlob.current) return;
@@ -155,9 +156,7 @@ export default function BGRemover() {
 
       <div className="min-h-screen bg-gray-50 text-gray-800 font-['Inter',sans-serif]">
         <div className="text-center pt-12 pb-8 px-4">
-          <div className="w-16 h-16 mx-auto bg-white border border-gray-200 rounded-2xl shadow-md flex items-center justify-center mb-6 overflow-hidden">
-            {/* <Image src="/image/bg.png" width={72} height={72} alt="logo" /> */}
-          </div>
+         
           <h1 className="font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-gray-900">
             Remove backgrounds
             <br />
@@ -360,7 +359,7 @@ export default function BGRemover() {
             </div>
           </div>
         </div>
-
+<ContentSection data={data} />
         {/* Hidden file input */}
         <input
           ref={fileRef}

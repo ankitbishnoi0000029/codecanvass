@@ -1,28 +1,19 @@
-import type { Metadata } from "next";
-import { buildMetadata } from "@/utils/seo/metdata";
-import { Trandingtool } from "@/components/sections/trandingtool";
 
+import { getMetaCached } from "@/actions/dbAction"
+import ToolHomePage from "@/components/sections/tool-page/tool-home";
 
-interface PageProps {
-  params: Promise<{ page: string }>
-}
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { page } = await params;
-  return buildMetadata({
-    table: "trendingtools",
-    urlId: page,
-    route: `${page}`,
-    fallbackTitle:       " Converters Online",
-    fallbackDescription: "Free online  converters to process and convert  data instantly.",
-    fallbackKeywords:    " converter,  pages,  editor, online  pages",
-  });
+export async function generateMetadata() {
+  const data = await getMetaCached('trendingtool')
+  return {
+    title: data?.title || "Tools",
+    description: data?.description || "Free online tool.",
+    keywords: data?.keywords || "converter",
+    robots: "index, follow",
+  };
 }
 
-
-const page = () => {
-  return (
-    <Trandingtool />
-  )
+export default async function Page() {
+  const data = await getMetaCached('trendingtool');
+  return <ToolHomePage page='trendingtools' title="Trending Tools" slug="trendingtool" data={data?.pageData} />;
 }
-
-export default page
+  

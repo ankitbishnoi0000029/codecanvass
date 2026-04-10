@@ -1,28 +1,32 @@
 import type { Metadata } from "next";
-import { buildMetadata } from "@/utils/seo/metdata";
 import { Trandingtool } from "@/components/sections/trandingtool";
+import { getMetaCached } from "@/actions/dbAction";
 
 
 interface PageProps {
   params: Promise<{ page: string }>
 }
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { page } = await params;
-  return buildMetadata({
-    table: "trendingtools",
-    urlId: page,
-    route: `${page}`,
-    fallbackTitle:       " Converters Online",
-    fallbackDescription: "Free online  converters to process and convert  data instantly.",
-    fallbackKeywords:    " converter,  pages,  editor, online  pages",
-  });
+
+  const data = await getMetaCached(page);
+
+  return {
+    title: data?.title || "tranding Converters Online",
+    description: data?.description || "Free online tranding converters to process .",
+    keywords: data?.keywords || "tranding converters, online tranding converters, free tranding converters, tranding converters tool",
+    robots: "index, follow",
+  };
 }
 
 
-const page = () => {
-  return (
-    <Trandingtool />
-  )
-}
 
-export default page
+export default async function page({ params }: PageProps) {
+  const { page } = await params;
+
+  const data = await getMetaCached(page);
+
+  return <Trandingtool data={data.pageData} />;
+  
+}

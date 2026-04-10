@@ -15,6 +15,7 @@ import prettierPluginXml from "@prettier/plugin-xml";
 import Meta from "./meta";
 import { PageTitle } from "./title";
 import { usePathname, useRouter } from "next/navigation";
+import ContentSection from "../ui/content";
 
 // Helper function to get file extension for download
 const getFileExtension = (converterId: string): string => {
@@ -457,7 +458,7 @@ ${gettersSetters}
 };
 
 // Main component
-export default function XmlConverters() {
+export default function XmlConverters(data: any) {
   const [selectedConverter, setSelectedConverter] = useState("");
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
@@ -682,7 +683,7 @@ export default function XmlConverters() {
     >
       <SidebarContentWrapper selectedOption={selectedOption as any}>
         <div className="mx-auto">
-          <PageTitle selectedData={selectedOption} />
+         <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           {/* XPath input for XPath tester */}
           {selectedConverter === "xpath-tester" && (
@@ -761,11 +762,7 @@ export default function XmlConverters() {
             )}
           </div>
         </div>
-
-        {/* DETAILS BOX */}
-        
-          {/* { selectedOption && <Meta selectedData={selectedOption} />} */}
-        
+        <ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

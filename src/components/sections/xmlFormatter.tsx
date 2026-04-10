@@ -3,8 +3,10 @@ import { getNavbar } from '@/actions/dbAction';
 import { dataType } from '@/utils/types/uiTypes';
 import React, { useState, useRef, useEffect } from 'react';
 import Meta from './meta';
+import { PageTitle } from './title';
+import ContentSection from '../ui/content';
 
-export function XmlFormatterPage() {
+export function XmlFormatterPage(data: any) {
   const [inputXml, setInputXml] = useState('');
   const [outputXml, setOutputXml] = useState('');
   const [tabSpace, setTabSpace] = useState('2');
@@ -348,12 +350,7 @@ export function XmlFormatterPage() {
       )}
 
       <div className="max-w-[1600px] mx-auto">
-        <h1 className="text-4xl font-bold text-center text-white my-2 drop-shadow-lg">
-          XML Formatter & Converter
-        </h1>
-        <p className="text-center text-white/90 mb-2 text-lg max-w-2xl mx-auto">
-          Instantly format, validate, and convert your XML data with ease!
-        </p>
+       <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)]">
           {/* Input Panel */}
@@ -488,33 +485,7 @@ export function XmlFormatterPage() {
           </div>
         </div>
 
-        {/* FAQ Section */}
-        {faqItems.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-8">
-              Frequently Asked Questions
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {faqItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all"
-                >
-                  <h3 className="text-xl font-semibold text-white mb-3 flex items-start gap-2">
-                    <span className="text-indigo-300">Q{index + 1}.</span>
-                    {item.question}
-                  </h3>
-                  <p className="text-white/80 leading-relaxed">{item.answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Meta Information */}
-        <div className="mt-8 text-center text-white/60 text-sm">
-          <Meta selectedData={list} />
-        </div>
+        <ContentSection data={data?.data} />
       </div>
 
       <style jsx>{`

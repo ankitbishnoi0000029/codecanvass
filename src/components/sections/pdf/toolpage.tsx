@@ -5,6 +5,8 @@ import { getTableData } from '@/actions/dbAction';
 import { dataType } from '@/utils/types/uiTypes';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { PageTitle } from '../title';
+import ContentSection from '@/components/ui/content';
 
 // ─── CDN loader cache ─────────────────────────────────────────────────────────
 const cdnCache = {};
@@ -591,7 +593,7 @@ function rowToTool(row) {
 }
 
 // ─── Main page component ──────────────────────────────────────────────────────
-export default function ToolPage() {
+export default function ToolPage(data : any) {
   const params = useParams();
   const router = useRouter();
 
@@ -793,8 +795,7 @@ console.log('Tool slug:', slug);
           <div className="inline-flex items-center justify-center w-16 h-16 text-white rounded-2xl mb-4 text-3xl" style={{ background: color }}>
             {tool.icon}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{tool.name}</h1>
-          <p className="text-gray-400">{tool.desc}</p>
+         <PageTitle title={data?.data?.title} description={data?.data?.description} />
         </div>
 
         {/* Card */}
@@ -852,6 +853,7 @@ console.log('Tool slug:', slug);
         <div className="text-center text-xs text-gray-400">
           🔒 All processing happens in your browser — files never leave your device
         </div>
+        <ContentSection data={data?.data} />
       </div>
     </div>
   );

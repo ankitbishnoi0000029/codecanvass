@@ -4,6 +4,7 @@ import { getTableData } from '@/actions/dbAction';
 import React, { useState, useEffect } from 'react';
 import { ToolCard } from './pdf/card'; // your existing card optional – install if missing
 import { SearchCode } from 'lucide-react';
+import ContentSection from '../ui/content';
 
 // Helper: convert DB row → tool object
 function rowToTool(row) {
@@ -34,7 +35,7 @@ function groupByCategory(tools) {
   }));
 }
 
-export default function App() {
+export default function PDFToolApp(data: any) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -63,15 +64,19 @@ export default function App() {
   const categories = groupByCategory(allTools);
 
   // Filtered view (search or category)
-const filtered = search.trim()
-  ? allTools.filter(
-      (t) =>
-        String(t.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-        String(t.desc ?? '').toLowerCase().includes(search.toLowerCase())
-    )
-  : activeCategory === 'All'
-    ? allTools
-    : allTools.filter((t) => t.category === activeCategory);
+  const filtered = search.trim()
+    ? allTools.filter(
+        (t) =>
+          String(t.name ?? '')
+            .toLowerCase()
+            .includes(search.toLowerCase()) ||
+          String(t.desc ?? '')
+            .toLowerCase()
+            .includes(search.toLowerCase())
+      )
+    : activeCategory === 'All'
+      ? allTools
+      : allTools.filter((t) => t.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -221,6 +226,7 @@ const filtered = search.trim()
           </>
         )}
       </div>
+      <ContentSection data={data?.data} />
     </div>
   );
 }

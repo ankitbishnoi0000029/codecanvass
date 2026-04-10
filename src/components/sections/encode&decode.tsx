@@ -16,11 +16,12 @@ import { dataType } from "@/utils/types/uiTypes";
 import { usePathname, useRouter } from "next/navigation";
 import Meta from "./meta";
 import { PageTitle } from "./title";
+import ContentSection from "../ui/content";
 
 /* ------------------------------------------------------
    ✔ MAIN COMPONENT
 ------------------------------------------------------ */
-export default function EncodeDecode() {
+export default function EncodeDecode(data: any) {
 
   const [list, setList] = useState<dataType[] | null>(null);
   const router = useRouter(); // ✅ Single declaration
@@ -250,7 +251,7 @@ export default function EncodeDecode() {
     >
       <SidebarContentWrapper selectedOption={selectedOption}>
         <div className="mx-auto space-y-6">
-          <PageTitle selectedData={selectedOption} />
+          <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -283,9 +284,7 @@ export default function EncodeDecode() {
         </div>
 
         {/* DETAILS BOX */}
-        {selectedOption && (
-           <Meta selectedData={selectedOption} />
-        )}
+        <ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

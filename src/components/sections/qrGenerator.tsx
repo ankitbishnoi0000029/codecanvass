@@ -6,8 +6,9 @@ import { QRCodeSVG } from "qrcode.react";
 import Meta from "./meta";
 import { dataType } from "@/utils/types/uiTypes";
 import { getNavbar } from "@/actions/dbAction";
+import ContentSection from "../ui/content";
 
-export function QRGenerator() {
+export function QRGenerator({ data }: { data: any }) {
   const [activeTab, setActiveTab] = useState("website");
   const [inputValue, setInputValue] = useState("");
   const [qrText, setQrText] = useState("Scan me!");
@@ -367,7 +368,7 @@ export function QRGenerator() {
           </p>
         </div>
       </div>
-      <Meta selectedData={list} />
+      <ContentSection data={data} />
     </div>
   );
 }

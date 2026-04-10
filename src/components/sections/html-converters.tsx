@@ -21,6 +21,7 @@ import { dataType } from "@/utils/types/uiTypes";
 import { getTableData } from "@/actions/dbAction";
 import { PageTitle } from "./title";
 import Meta from "./meta";
+import ContentSection from "../ui/content";
 
 // ==============================
 // FILE EXTENSIONS
@@ -34,7 +35,7 @@ const getFileExtension = (key: string): string => {
   return map[key] ?? "txt";
 };
 
-export function HtmlConverters() {
+export function HtmlConverters(data: any) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -205,7 +206,7 @@ export function HtmlConverters() {
       {/* ✅ FIXED: passing SidebarOption instead of dataType */}
       <SidebarContentWrapper selectedOption={selectedSidebarOption}>
         <div className="mx-auto">
-          {selectedData && <PageTitle selectedData={selectedData} />}
+          <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <textarea
@@ -253,7 +254,7 @@ export function HtmlConverters() {
           </div>
         </div>
 
-        {selectedData && <Meta selectedData={selectedData} />}
+        <ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   );

@@ -3,6 +3,7 @@
 import ddb from '@/utils/db/mysql';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { cache } from "react";
 
 export async function getTableData(table) {
   try {
@@ -13,6 +14,7 @@ export async function getTableData(table) {
     return [];
   }
 }
+
 
 export async function getNavbar(route) {
   try {
@@ -26,17 +28,30 @@ export async function getNavbar(route) {
   }
 }
 
-export async function getMeta(table, route) {
-  const [rows] = await ddb.query(`SELECT metadata FROM ?? WHERE route = ? LIMIT 1`, [table, route]);
 
-  const meta = rows[0]?.metadata;
-  const dbSlug = rows[0]?.slug;
+
+export const getMetaCached = cache(async (route) => {
+  const [rows] = await ddb.query(
+    `SELECT seo_title, seo_description, seo_keywords, title, description, tags, faqs, content, excerpt 
+     FROM posts WHERE url_id = ? LIMIT 1`,
+    [route]
+  );
 
   return {
-    metadata: meta,
-    dbSlug: dbSlug,
+    title: rows[0]?.seo_title || '',
+    description: rows[0]?.seo_description || '',
+    keywords: rows[0]?.seo_keywords || '',
+    pageData: {
+      title: rows[0]?.title || '',
+      description: rows[0]?.description || '',
+      tags: rows[0]?.tags || '',
+      faqs: rows[0]?.faqs || '',
+      content: rows[0]?.content || '',
+      excerpt: rows[0]?.excerpt || '',
+    },
   };
-}
+});
+
 
 export async function getPageContent(table, url_id) {
   const [rows] = await ddb.query(
@@ -310,8 +325,6 @@ export async function subscribe(email) {
 }
 
 export async function insertPost(page_tbl, url_id, data) {
-  console.log('page_tbl => ', page_tbl);
-  console.log('url_id => ', url_id);
   try {
     const {
       title,
@@ -319,7 +332,6 @@ export async function insertPost(page_tbl, url_id, data) {
       excerpt,
       description,
       faqs,
-      slug,
       status,
       visibility,
       password,
@@ -343,7 +355,6 @@ export async function insertPost(page_tbl, url_id, data) {
       twitterCard,
       canonicalUrl,
     } = data;
-    console.log('Data received in insertPost => ', data);
     // ── VALIDATE ──────────────────────────────────────────
     if (!title?.trim()) throw new Error('Title is required');
     if (!url_id?.trim()) throw new Error('URL ID is required');
@@ -428,14 +439,14 @@ export async function insertPost(page_tbl, url_id, data) {
       // ── INSERT ───────────────────────────────────────────
       const [result] = await ddb.query(
         `INSERT INTO posts
-    (title,description,faqs,page_tbl,url_id, content, excerpt, slug, status, visibility,
+    (title,description,faqs,page_tbl,url_id, content, excerpt, status, visibility,
      password, publish_date, featured_image, allow_comments,
      allow_pingbacks, seo_title, seo_description, seo_keywords,
      word_count, char_count, reading_time, post_format, author,
      template, og_title, og_description, og_image,
      twitter_card, canonical_url, tags, created_at, updated_at)
    VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+    (?, ?, ?, ?, ?, ?, ?, ?, ?,
      ?, ?, ?, ?,
      ?, ?, ?, ?,
      ?, ?, ?, ?, ?,
@@ -449,7 +460,6 @@ export async function insertPost(page_tbl, url_id, data) {
           url_id || null,
           content || null,
           excerpt || null,
-          slug,
           status || 'draft',
           visibility || 'public',
           password || null,

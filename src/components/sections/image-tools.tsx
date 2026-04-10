@@ -9,6 +9,7 @@ import { dataType } from "@/utils/types/uiTypes"
 import { PageTitle } from "./title"
 import { usePathname, useRouter } from "next/navigation"
 import { LoadingComponent } from "../ui/loading"
+import ContentSection from "../ui/content"
 
 // Helper function to convert image formats
 const convertImageFormat = async (file: File, targetFormat: string): Promise<string> => {
@@ -74,7 +75,7 @@ const splitGIF = async (file: File): Promise<string[]> => {
   });
 };
 
-export function ImageTools() {
+export function ImageTools(data:any) {
   const [selectedTool, setSelectedTool] = useState<string>("")
   const [inputFile, setInputFile] = useState<File | null>(null)
   const [outputUrl, setOutputUrl] = useState<string | string[]>("")
@@ -246,7 +247,7 @@ const [pageLoading, setPageLoading] = useState(false);
         {!!selectedOption && (
           <div className="space-y-6">
             {/* Header */}
-            <PageTitle selectedData={selectedOption} />
+             <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
             {/* Upload + Preview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -316,32 +317,7 @@ const [pageLoading, setPageLoading] = useState(false);
         )}
 
         {/* DETAILS BOX */}
-        {selectedOption && (
-          <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
-            <h3 className="text-lg font-semibold">Converter Details</h3>
-
-            <p>
-              <strong>Description:</strong>
-              <br />
-              {selectedOption.des}
-            </p>
-
-            <div>
-              <strong className="block mb-2">Keywords:</strong>
-              <div className="flex flex-wrap gap-2">
-                {selectedOption.keyword
-                  ?.split(",")
-                  .map((kw, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition">
-                      {kw.trim()}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
     )}

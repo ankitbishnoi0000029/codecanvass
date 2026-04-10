@@ -13,8 +13,9 @@ import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 import { useRouter, usePathname } from "next/navigation"
 import Meta from "./meta"
+import ContentSection from "../ui/content"
 
-export function Trandingtool() {
+export function Trandingtool(data: any) {
     const router = useRouter()
     const pathname = usePathname()
 
@@ -216,8 +217,8 @@ XOR: ${a ^ b}`)
         >
             <SidebarContentWrapper selectedOption={selectedOption || undefined}>
                 <div className="space-y-6">
-                    <PageTitle selectedData={selectedOption || undefined} />
-
+ <PageTitle title={data?.data?.title} description={data?.data?.description} />
+ 
                     {/* ASCII TOOL */}
                     {selectedTool === "image-to-ascii-art" && (
                         <div className="space-y-4">
@@ -293,9 +294,7 @@ XOR: ${a ^ b}`)
                     )}
                 </div>
 
-                {selectedOption && (
-                    <Meta selectedData={selectedOption} />
-                )}
+             <ContentSection data={data?.data} />
             </SidebarContentWrapper>
         </ReusableSidebar>
     )

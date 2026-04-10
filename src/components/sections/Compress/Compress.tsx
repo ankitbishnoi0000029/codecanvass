@@ -19,6 +19,11 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { gzip, unzip, zip as fflateZip } from 'fflate';
 import { PDFDocument } from 'pdf-lib';
+import { categoriesHub } from '@/utils/consitants/consitaint';
+import { ToolCard } from './toolcard';
+import { useRouter } from 'next/navigation';
+import { PageTitle } from '../title';
+import ContentSection from '@/components/ui/content';
 
 // ─── PRESETS ──────────────────────────────────────────────────────────────────
 type Preset = {
@@ -54,108 +59,15 @@ const PRESETS: Preset[] = [
   },
 ];
 
-// ─── CATEGORIES ───────────────────────────────────────────────────────────────
-const CATEGORIES = [
-  {
-    id: 'image', label: 'Image', icon: '🖼️', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20',
-    tools: [
-      { id: 'png',      name: 'PNG Compressor',        description: 'Losslessly shrink PNG files.',        tags: ['png','lossless'],  popular: true },
-      { id: 'jpg',      name: 'JPG Compressor',        description: 'Reduce JPG sizes.',                   tags: ['jpg','jpeg'],       popular: true },
-      { id: 'jpeg',     name: 'JPEG Compressor',       description: 'Optimise JPEG for web.',              tags: ['jpeg','image'] },
-      { id: 'webp',     name: 'WebP Compressor',       description: 'Compress WebP images.',               tags: ['webp','image'],     isNew: true },
-      { id: 'gif',      name: 'GIF Compressor',        description: 'Reduce animated GIF sizes.',          tags: ['gif','animated'] },
-      { id: 'svg',      name: 'SVG Compressor',        description: 'Minify SVG vector files.',            tags: ['svg','vector'] },
-      { id: 'avif',     name: 'AVIF Compressor',       description: 'Compress AVIF images.',               tags: ['avif'],            isNew: true },
-      { id: 'bmp',      name: 'BMP Compressor',        description: 'Compress legacy BMP bitmaps.',        tags: ['bmp','bitmap'] },
-      { id: 'tiff',     name: 'TIFF Compressor',       description: 'Reduce TIFF file sizes.',             tags: ['tiff','print'] },
-      { id: 'ico',      name: 'ICO Compressor',        description: 'Compress favicon ICO files.',         tags: ['ico','favicon'] },
-      { id: 'heic',     name: 'HEIC Compressor',       description: 'Compress Apple HEIC photos.',         tags: ['heic','apple'] },
-      { id: 'psd',      name: 'PSD Compressor',        description: 'Reduce Photoshop PSD sizes.',         tags: ['psd','photoshop'] },
-      { id: 'bulk-img', name: 'Bulk Image Compressor', description: 'Compress many images at once.',       tags: ['bulk','batch'],    popular: true },
-      { id: 'res-img',  name: 'Resolution Compressor', description: 'Downscale image resolution.',         tags: ['resolution','resize'] },
-    ],
-  },
-  {
-    id: 'video', label: 'Video', icon: '🎥', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20',
-    tools: [
-      { id: 'mp4',   name: 'MP4 Compressor',      description: 'Compress MP4 videos.',          tags: ['mp4','video'],  popular: true },
-      { id: 'mov',   name: 'MOV Compressor',      description: 'Reduce Apple MOV sizes.',       tags: ['mov','apple'] },
-      { id: 'avi',   name: 'AVI Compressor',      description: 'Compress AVI video files.',     tags: ['avi','legacy'] },
-      { id: 'mkv',   name: 'MKV Compressor',      description: 'Compress MKV containers.',      tags: ['mkv','video'] },
-      { id: 'webm',  name: 'WebM Compressor',     description: 'Compress WebM videos.',         tags: ['webm','web'] },
-      { id: '4k',    name: '4K Compressor',       description: 'Compress ultra-HD 4K footage.', tags: ['4k','uhd'],     popular: true },
-      { id: 'hd',    name: 'HD Compressor',       description: 'Reduce 1080p/720p sizes.',      tags: ['hd','1080p'] },
-      { id: 'yt',    name: 'YouTube Compressor',  description: 'Compress for YouTube.',         tags: ['youtube','video'] },
-    ],
-  },
-  {
-    id: 'audio', label: 'Audio', icon: '🎵', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20',
-    tools: [
-      { id: 'mp3',  name: 'MP3 Compressor',  description: 'Reduce MP3 file sizes.',     tags: ['mp3','audio'],   popular: true },
-      { id: 'wav',  name: 'WAV Compressor',  description: 'Resample & shrink WAV.',     tags: ['wav','audio'] },
-      { id: 'aac',  name: 'AAC Compressor',  description: 'Optimise AAC audio.',        tags: ['aac','audio'] },
-      { id: 'ogg',  name: 'OGG Compressor',  description: 'Compress OGG Vorbis.',       tags: ['ogg','audio'] },
-      { id: 'flac', name: 'FLAC Compressor', description: 'Reduce FLAC sizes.',         tags: ['flac','audio'] },
-      { id: 'm4a',  name: 'M4A Compressor',  description: 'Compress Apple M4A.',        tags: ['m4a','apple'] },
-    ],
-  },
-  {
-    id: 'document', label: 'Document', icon: '📄', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20',
-    tools: [
-      { id: 'pdf',      name: 'PDF Compressor',   description: 'Compress PDF files (page-render method).',  tags: ['pdf'],         popular: true },
-      { id: 'docx',     name: 'DOCX Compressor',  description: 'Compress Word documents.',                  tags: ['docx','word'], popular: true },
-      { id: 'xlsx',     name: 'XLSX Compressor',  description: 'Compress Excel spreadsheets.',              tags: ['xlsx','excel'] },
-      { id: 'pptx-doc', name: 'PPTX Compressor',  description: 'Compress PowerPoint files.',                tags: ['pptx','slides'] },
-      { id: 'epub',     name: 'EPUB Compressor',  description: 'Compress eBook EPUB files.',                tags: ['epub','ebook'] },
-      { id: 'txt',      name: 'TXT Compressor',   description: 'Gzip-compress text files.',                 tags: ['txt','text'] },
-    ],
-  },
-  {
-    id: 'archive', label: 'Archive', icon: '📦', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20',
-    tools: [
-      { id: 'zip',    name: 'ZIP Compressor',    description: 'Re-compress ZIP at DEFLATE level 9.',     tags: ['zip'],          popular: true },
-      { id: 'rar',    name: 'RAR Compressor',    description: 'Gzip-wrap RAR archives.',                 tags: ['rar'],          popular: true },
-      { id: '7z',     name: '7Z Compressor',     description: 'Gzip-wrap 7-Zip archives.',               tags: ['7z','archive'] },
-      { id: 'tar',    name: 'TAR Compressor',    description: 'Gzip-compress TAR bundles.',              tags: ['tar','unix'] },
-      { id: 'gz',     name: 'GZ Compressor',     description: 'GZIP compress any file.',                 tags: ['gzip','gz'] },
-      { id: 'folder', name: 'Folder → ZIP',      description: 'Pack entire folder into compressed ZIP.', tags: ['folder'],       popular: true },
-    ],
-  },
-  {
-    id: 'developer', label: 'Developer', icon: '💻', color: 'text-lime-400', bg: 'bg-lime-500/10 border-lime-500/20',
-    tools: [
-      { id: 'html-min', name: 'HTML Minifier',         description: 'Strip whitespace from HTML.',  tags: ['html','minify'],  popular: true },
-      { id: 'css-min',  name: 'CSS Minifier',          description: 'Minify CSS stylesheets.',      tags: ['css','minify'],   popular: true },
-      { id: 'js-min',   name: 'JS Minifier',           description: 'Minify JavaScript bundles.',   tags: ['js','minify'],    popular: true },
-      { id: 'json-min', name: 'JSON Minifier',         description: 'Compact JSON data.',           tags: ['json','minify'] },
-      { id: 'xml-min',  name: 'XML Minifier',          description: 'Minify XML markup.',           tags: ['xml','minify'] },
-      { id: 'sql-min',  name: 'SQL Compressor',        description: 'Minify SQL queries.',          tags: ['sql'] },
-      { id: 'ts-min',   name: 'TypeScript Compressor', description: 'Compress TS/TSX files.',       tags: ['ts','typescript'] },
-      { id: 'php-min',  name: 'PHP Compressor',        description: 'Minify PHP source.',           tags: ['php'] },
-      { id: 'py-min',   name: 'Python Compressor',     description: 'Minify Python scripts.',       tags: ['python','py'] },
-      { id: 'yaml-min', name: 'YAML Compressor',       description: 'Compress YAML config.',        tags: ['yaml'] },
-    ],
-  },
-  {
-    id: 'social', label: 'Social', icon: '📱', color: 'text-pink-400', bg: 'bg-pink-500/10 border-pink-500/20',
-    tools: [
-      { id: 'whatsapp',   name: 'WhatsApp Image',    description: 'Optimise images for WhatsApp.',  tags: ['whatsapp'],    popular: true },
-      { id: 'instagram',  name: 'Instagram Image',   description: 'Compress for Instagram.',        tags: ['instagram'] },
-      { id: 'facebook',   name: 'Facebook Image',    description: 'Optimise for Facebook.',         tags: ['facebook'] },
-      { id: 'tiktok',     name: 'TikTok Video',      description: 'Compress for TikTok.',           tags: ['tiktok'] },
-      { id: 'thumbnail',  name: 'Thumbnail',         description: 'Optimise video thumbnails.',     tags: ['thumbnail','youtube'] },
-      { id: 'screenshot', name: 'Screenshot',        description: 'Compress app screenshots.',      tags: ['screenshot'] },
-    ],
-  },
-];
+// ─── categoriesHub ───────────────────────────────────────────────────────────────
 
-type Tool     = (typeof CATEGORIES)[0]['tools'][0] & {
+type Tool     = (typeof categoriesHub)[0]['tools'][0] & {
   categoryId?: string;
   popular?: boolean;
   isNew?: boolean;
   badge?: string;
 };
-type Category = (typeof CATEGORIES)[0];
+type Category = (typeof categoriesHub)[0];
 type Result   = { originalSize: number; compressedSize: number; ratio: number; url: string; downloadName: string; method: string };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -684,7 +596,7 @@ function fmt(b: number) {
   return `${(b/(1<<20)).toFixed(2)} MB`;
 }
 function getCat(id: string): Category {
-  return CATEGORIES.find(c => c.tools.some(t => t.id === id)) ?? CATEGORIES[0];
+  return categoriesHub.find(c => c.tools.some(t => t.id === id)) ?? categoriesHub[0];
 }
 const ACCEPT: Record<string,string> = {
   image:    'image/*,.heic,.heif,.avif,.raw,.cr2,.nef,.psd,.tga,.dng',
@@ -696,44 +608,9 @@ const ACCEPT: Record<string,string> = {
   social:   'image/*,video/*',
 };
 
-// ─── Badge ─────────────────────────────────────────────────────────────────────
-function Badge({ text }: { text: string }) {
-  const cls: Record<string,string> = {
-    AI: 'bg-fuchsia-600 text-white', new: 'bg-red-500 text-white', popular: 'bg-emerald-600 text-white'
-  };
-  return <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full tracking-wide ${cls[text]??'bg-slate-700 text-slate-300'}`}>{text.toUpperCase()}</span>;
-}
 
 // ─── ToolCard ──────────────────────────────────────────────────────────────────
-function ToolCard({ tool, category, onClick, listView }: { tool: Tool; category: Category; onClick: () => void; listView?: boolean }) {
-  const t = tool as any;
-  if (listView) return (
-    <button onClick={onClick} className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-[#0d0f14] border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all group text-left cursor-pointer">
-      <span className="text-xl w-7 shrink-0">{category.icon}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white truncate">{tool.name}</p>
-        <p className="text-xs text-slate-500 truncate">{tool.description}</p>
-      </div>
-      <div className="flex gap-1 shrink-0">
-        {t.badge && <Badge text={t.badge}/>}{t.isNew && <Badge text="new"/>}{t.popular && <Badge text="popular"/>}
-      </div>
-      <span className="text-slate-600 group-hover:text-slate-300 ml-1">→</span>
-    </button>
-  );
-  return (
-    <button onClick={onClick} className={`relative p-4 rounded-2xl border ${category.bg} hover:scale-[1.02] hover:shadow-xl hover:shadow-black/40 transition-all duration-200 group text-left cursor-pointer`}>
-      <div className="flex items-start justify-between mb-2">
-        <span className="text-2xl">{category.icon}</span>
-        <div className="flex flex-wrap gap-1 justify-end">{t.badge&&<Badge text={t.badge}/>}{t.isNew&&<Badge text="new"/>}{t.popular&&<Badge text="popular"/>}</div>
-      </div>
-      <h3 className={`text-sm font-bold ${category.color} mb-1 leading-tight`}>{tool.name}</h3>
-      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{tool.description}</p>
-      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="text-xs text-slate-400">Open →</span>
-      </div>
-    </button>
-  );
-}
+
 
 // ─── Modal ─────────────────────────────────────────────────────────────────────
 function CompressorModal({ tool, onClose }: { tool: Tool; onClose: () => void }) {
@@ -1044,15 +921,15 @@ function CompressorModal({ tool, onClose }: { tool: Tool; onClose: () => void })
 }
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
-export default function CompressorHub() {
+export default function CompressorHub(data: any) {
   const [query,          setQuery]          = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeTool,     setActiveTool]     = useState<Tool | null>(null);
   const [view,           setView]           = useState<'grid' | 'list'>('grid');
   const [sortBy,         setSortBy]         = useState<'popular' | 'name'>('popular');
-
+  const router = useRouter();
   const allTools = useMemo(
-    () => CATEGORIES.flatMap(c => c.tools.map(t => ({ ...t, categoryId: c.id }))),
+    () => categoriesHub.flatMap(c => c.tools.map(t => ({ ...t, categoryId: c.id }))),
     []
   );
   const filtered = useMemo(() => {
@@ -1079,6 +956,7 @@ export default function CompressorHub() {
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-1">
               <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">All-in-One</span>{' '}File Compressor
             </h1>
+            <PageTitle title={data?.data?.title} description={data?.data?.description} />
             <p className="text-slate-500 text-sm">{allTools.length} tools · Images · Video · Audio · PDF · DOCX · ZIP · RAR · Folder · Code</p>
           </div>
 
@@ -1086,7 +964,7 @@ export default function CompressorHub() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Total Tools', value: allTools.length, icon: '🛠️' },
-              { label: 'Categories',  value: CATEGORIES.length, icon: '📂' },
+              { label: 'Categories',  value: categoriesHub.length, icon: '📂' },
               { label: 'Max Savings', value: '50%+', icon: '⚡' },
               { label: 'File Types',  value: '40+', icon: '📁' },
             ].map(s => (
@@ -1144,7 +1022,7 @@ export default function CompressorHub() {
             className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeCategory==='all'?'bg-violet-600 text-white shadow-lg shadow-violet-900/40':'bg-white/5 text-slate-400 hover:bg-white/8'}`}>
             All · {allTools.length}
           </button>
-          {CATEGORIES.map(cat => (
+          {categoriesHub.map(cat => (
             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
               className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeCategory===cat.id?`${cat.bg} ${cat.color}`:'bg-white/5 text-slate-400 hover:bg-white/8'}`}>
               {cat.icon} {cat.label}
@@ -1182,14 +1060,15 @@ export default function CompressorHub() {
           </div>
         ) : view === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {filtered.map(t => { const cat = CATEGORIES.find(c=>c.id===t.categoryId)??CATEGORIES[0]; return <ToolCard key={t.id} tool={t} category={cat} onClick={()=>setActiveTool(t)}/>; })}
+            {filtered.map(t => { const cat = categoriesHub.find(c=>c.id===t.categoryId)??categoriesHub[0]; return <ToolCard key={t.id} tool={t} category={cat}/>; })}
           </div>
         ) : (
           <div className="space-y-1.5">
-            {filtered.map(t => { const cat = CATEGORIES.find(c=>c.id===t.categoryId)??CATEGORIES[0]; return <ToolCard key={t.id} tool={t} category={cat} onClick={()=>setActiveTool(t)} listView/>; })}
+            {filtered.map(t => { const cat = categoriesHub.find(c=>c.id===t.categoryId)??categoriesHub[0]; return <ToolCard key={t.id} tool={t} category={cat} listView/>; })}
           </div>
         )}
       </div>
+      <ContentSection data={data?.data} />
     </div>
   );
 }

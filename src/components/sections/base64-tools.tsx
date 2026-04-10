@@ -7,13 +7,24 @@ import { Upload, Download, Palette, Settings } from "lucide-react"
 import { getTableData } from "@/actions/dbAction"
 import { dataType } from "@/utils/types/uiTypes"
 import { PageTitle } from "./title"
+import ContentSection from "../ui/content"
+import { usePathname, useRouter } from "next/navigation"
 
-export function Base64Tools() {
+export function Base64Tools(data: any) {
   const [selectedConverter, setSelectedConverter] = useState<number | null>(null)
   const [inputValue, setInputValue] = useState<string>("")
   const [outputValue, setOutputValue] = useState<string>("")
   const [file, setFile] = useState<File | null>(null)
   const [list, setList] = useState<dataType[] | null>(null)
+
+  const router = useRouter();
+    const pathname = usePathname();
+  useEffect(() => {
+    const slug = pathname.split('/').pop() ?? '';
+    setSelectedConverter(slug ? Number(slug) : null);
+    setInputValue('');
+  }, [pathname]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +35,7 @@ export function Base64Tools() {
   }, [])
 
   const converterOptions: SidebarOption[] = (list ?? []).map((item) => ({
-    id: String(item.id),
+    id: String(item.route),
     label: item.urlName,
     icon: Palette,
   }))
@@ -35,9 +46,6 @@ export function Base64Tools() {
 
   const selectedOption = list?.find((opt) => opt.id === selectedConverter) ?? null
 
-  useEffect(() => {
-    if (list && list.length > 0) setSelectedConverter(list[0].id)
-  }, [list])
 
   // ─── Core Conversion Logic ────────────────────────────────────────────────
 
@@ -281,6 +289,7 @@ export function Base64Tools() {
 
   const handleOptionChange = (id: string) => {
     setSelectedConverter(Number(id))
+      router.push(`${id}`);
     setInputValue("")
     setOutputValue("")
     setFile(null)
@@ -327,7 +336,7 @@ export function Base64Tools() {
     >
       <SidebarContentWrapper selectedOption={selectedOption as unknown as SidebarOption | undefined}>
         <div className="mx-auto space-y-6">
-          <PageTitle selectedData={selectedOption || undefined} />
+           <PageTitle title={data?.data?.title} description={data?.data?.description} />
 
           {/* Input + Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -403,37 +412,7 @@ export function Base64Tools() {
             )}
           </div>
         </div>
-
-        {/* DETAILS BOX */}
-        {selectedOption && (
-          <div className="my-8 p-4 border rounded-lg bg-gray-50 space-y-3">
-            <h3 className="text-lg font-semibold">Converter Details</h3>
-
-            <p>
-              <strong>Description:</strong>
-              <br />
-              {selectedOption.des}
-            </p>
-
-            <div>
-              <strong className="block mb-2">Keywords:</strong>
-              <div className="flex flex-wrap gap-2">
-                {(selectedOption?.keyword ?? "")
-                  .split(",")
-                  .filter(Boolean)
-                  .map((kw: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm border border-purple-200 shadow-sm hover:bg-purple-200 transition"
-                    >
-                      {kw.trim()}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
-
+<ContentSection data={data?.data} />
       </SidebarContentWrapper>
     </ReusableSidebar>
   )

@@ -1,17 +1,27 @@
+
+import { getMetaCached } from "@/actions/dbAction"
 import { QRGenerator } from "@/components/sections/qrGenerator";
-import { buildMetadata } from "@/utils/seo/metdata";
+
 
 export async function generateMetadata() {
-  return buildMetadata({
-    table: "navbar",
-    urlId: 'qrGenerator',
-    route: `/qr-generator`,
-    fallbackTitle:       "QR Generator Online",
-    fallbackDescription: "Free online QR code generator to create QR codes instantly.",
-    fallbackKeywords:    "qr generator, qr code, online qr generator, qr tools",
-  });
+
+  const data = await getMetaCached('qr-generator');
+
+  return {
+    title: data?.title || "QR Generator Online",
+    description: data?.description || "Free online QR code generator to create QR codes instantly.",
+    keywords: data?.keywords || "qr generator, qr code, online qr generator, qr tools",
+    robots: "index, follow",
+  };
 }
 
-export default function QRGeneratorPage() {
-  return <QRGenerator />;
+
+
+
+export default async function Page() {
+  
+  const data = await getMetaCached('qr-generator');
+
+  return <QRGenerator data={data.pageData} />;
 }
+

@@ -30,7 +30,7 @@ function getPoolConfig(): mysql.PoolOptions {
     // Har serverless function sirf 1 connection use kare
     // 5 rakha toh = disaster (50 concurrent users = 250 connections = Hostinger ban)
     connectionLimit: 1,
-    queueLimit: 10,
+    queueLimit: 100,
 
     connectTimeout: 8_000,
     idleTimeout: 20_000,    // Hostinger ka wait_timeout usually 28800s hai
