@@ -43,7 +43,6 @@ export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[]
     ...cat,
     subcategories: subcategories.filter((sub) => sub.category_id === cat.id),
   }));
-console.log(mergedCategories);
   const handleMouseEnter = (id: string | number) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveMenu(id);

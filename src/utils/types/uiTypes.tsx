@@ -68,6 +68,7 @@ export interface CategoryItem {
 export interface Category {
   id: string | number;
   name: string;
+  href: string;
 }
 
 export interface Subcategory {
