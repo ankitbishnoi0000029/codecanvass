@@ -7,6 +7,7 @@ import { getTableData } from "@/actions/dbAction";
 interface Category {
   id: string | number;
   name: string;
+  href: string;
 }
 
 interface Subcategory {
@@ -42,7 +43,7 @@ export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[]
     ...cat,
     subcategories: subcategories.filter((sub) => sub.category_id === cat.id),
   }));
-
+console.log(mergedCategories);
   const handleMouseEnter = (id: string | number) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveMenu(id);
@@ -101,7 +102,7 @@ export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[]
                 onMouseLeave={handleMouseLeave}
               >
                 {/* Trigger */}
-                <button className="flex items-center gap-1 py-2 px-1.5 rounded-lg text-xs font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 whitespace-nowrap">
+                <Link href={cat.href} className="flex items-center gap-1 py-2 px-1.5 rounded-lg text-xs font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 whitespace-nowrap">
                   {cat.name}
                   <svg
                     className={`w-3 h-3 transition-transform duration-200 text-gray-400 ${activeMenu === cat.id ? "rotate-180 text-purple-500" : ""}`}
@@ -109,7 +110,7 @@ export function SubNavbar( { cate, sub }: { cate: Category[]; sub: Subcategory[]
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
-                </button>
+                </Link>
 
                 {/* Dropdown */}
                 {activeMenu === cat.id && cat.subcategories.length > 0 && (
