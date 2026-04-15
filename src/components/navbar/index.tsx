@@ -18,12 +18,12 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Compress Hub', href: '/compress' },
-    { name: 'Calculator', href: '/calculator' },
-    { name: 'Bussiness ', href: '/business-tools' },
-    { name: 'GST Tool', href: '/gst-tools' },
-    { name: 'Salary Tool', href: '/salary-tools' },
-    { name: 'Loan Tool', href: '/loan-banking-tools' },
-    { name: 'Seo Tool', href: '/seo-tools' },
+    { name: 'Calculator', href: '/calculators' },
+    // { name: 'Bussiness ', href: '/business-tools' },
+    // { name: 'GST Tool', href: '/gst-tools' },
+    // { name: 'Salary Tool', href: '/salary-tools' },
+    // { name: 'Loan Tool', href: '/loan-banking-tools' },
+    // { name: 'Seo Tool', href: '/seo-tools' },
     { name: 'JSON Formatter', href: '/json-formatter' },
     { name: 'XML Formatter', href: '/xml-formatter' },
     { name: 'Generator QR', href: '/qr-generator' }, // ✅ fixed
