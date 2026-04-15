@@ -75,3 +75,66 @@ export function stripHTML(html: string): string {
 }
 
 
+
+// utils/downloadUtils.ts
+
+/**
+ * Downloads an array of { metric, value } objects as a formatted .txt file
+ * @param data - Array of objects with `metric` and `value` properties
+ * @param options - Optional configuration
+ */
+export const downloadMetricsAsText = (
+  data: Array<{ metric: string; value: any }>,
+  options?: {
+    filename?: string;          // default: 'report'
+    title?: string;             // default: 'Data Report'
+    includeDate?: boolean;      // default: true
+    separator?: string;         // default: '--------------------------------------------------'
+    footer?: string;            // default: '* Generated from application'
+    dateLocale?: string;        // default: 'en-IN'
+  }
+) => {
+  const {
+    filename = 'report',
+    title = 'Data Report',
+    includeDate = true,
+    separator = '--------------------------------------------------',
+    footer = '* Generated from application',
+    dateLocale = 'en-IN',
+  } = options || {};
+
+  // Build content
+  const lines: string[] = [];
+
+  lines.push(title);
+  lines.push('');
+
+  if (includeDate) {
+    lines.push(`Date: ${new Date().toLocaleDateString(dateLocale)}`);
+    lines.push('');
+  }
+
+  lines.push(separator);
+  lines.push('');
+
+  // Add each metric: value line
+  data.forEach(row => {
+    lines.push(`${row.metric}: ${row.value}`);
+  });
+
+  lines.push('');
+  lines.push(separator);
+  lines.push(footer);
+
+  const textContent = lines.join('\n');
+
+  // Trigger download
+  const blob = new Blob([textContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  a.download = `${filename}_${timestamp}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+};

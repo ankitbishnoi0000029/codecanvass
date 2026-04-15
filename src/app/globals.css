@@ -118,7 +118,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    /* @apply bg-background text-foreground; */
     max-width: 100vw;
     /* background-image: linear-gradient(to bottom right, #faf5ff, #fdf2f8, #ffffff); */
   }
