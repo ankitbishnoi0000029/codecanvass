@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "free coding tools",
   ],
   alternates: {
-    canonical: "https://www.aionlinetoolss.com/about",
+    canonical: "https://aionlinetoolss.com/about",
   },
 };
 

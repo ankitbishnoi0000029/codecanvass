@@ -57,4 +57,4 @@ Disallow: /node_modules/
 Disallow: /_next/static/
 
 # --- Sitemap ---
-Sitemap: https://www.aionlinetoolss.com/sitemap.xml
+Sitemap: https://aionlinetoolss.com/sitemap.xml
