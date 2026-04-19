@@ -6,6 +6,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     // core pages
     "",
+    //calu
+    "/calculators",
     "/contact",
     "/blog",
     "/disclaimer",
@@ -15,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/gbl-gltf-compress",
     "/pdf-tool",
 
+    
     // html tools
     "/html-converters/html-stripper",
     "/html-converters/html-to-markdown",
