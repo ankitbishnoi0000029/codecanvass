@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import { getMetaCached } from '@/actions/dbAction';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -16,6 +17,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import ContentSection from '../ui/content';
 
 // --- Utility Functions ---
 const formatCurrency = (value: number): string => {
@@ -106,6 +108,20 @@ export default function EMICalculator() {
   const [interestRate, setInterestRate] = useState<number>(9);
   const [tenureYears, setTenureYears] = useState<number>(5);
   const [processingFee, setProcessingFee] = useState<number>(1);
+  const [pageContent,setPageContent] = useState<any>(null);
+
+const fetchPageContent = async () => {
+  try {
+    const data = await getMetaCached('emi-calculator');
+    console.log("Fetched page content:",data?.pageData);
+    setPageContent(data);
+  } catch (error) {
+    console.error('Error fetching page content:', error);
+  }
+}
+  useEffect(() => {
+    fetchPageContent();
+  }, []);
 
   const months = tenureYears * 12;
   const { emi, totalPayment, totalInterest } = useMemo(
@@ -473,6 +489,7 @@ export default function EMICalculator() {
           </div>
         </div>
       </div>
+      <ContentSection data={pageContent?.data} />
     </div>
   );
 }

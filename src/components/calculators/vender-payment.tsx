@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -18,6 +18,8 @@ import {
 } from 'recharts';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { getMetaCached } from '@/actions/dbAction';
+import ContentSection from '../ui/content';
 
 // --- Types ---
 interface Vendor {
@@ -106,7 +108,21 @@ export default function VendorPaymentTracker() {
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Paid' | 'Pending' | 'Overdue'>('all');
+ const [pageContent,setPageContent] = useState<any>(null);
 
+const fetchPageContent = async () => {
+  try {
+    const data = await getMetaCached('vendor-payment');
+    console.log("Fetched page content:",data?.pageData);
+    setPageContent(data);
+  } catch (error) {
+    console.error('Error fetching page content:', error);
+  }
+}
+  useEffect(() => {
+    fetchPageContent();
+  }, []);
+  console.log("pageContent",pageContent);
   // Form states
   const [newVendor, setNewVendor] = useState<Omit<Vendor, 'id' | 'totalDue' | 'totalPaid'>>({
     name: '', contactPerson: '', phone: '', email: '', address: '',
@@ -616,7 +632,7 @@ export default function VendorPaymentTracker() {
             *Disclaimer: This tool is for demonstration and planning. For critical financial decisions, please consult your accountant.
           </div>
         </div>
-      </div>
+      </div> <ContentSection data={pageContent} />
     </div>
   );
 }

@@ -439,19 +439,46 @@ export async function insertPost(page_tbl, url_id, data) {
       // ── INSERT ───────────────────────────────────────────
       const [result] = await ddb.query(
         `INSERT INTO posts
-    (title,description,faqs,page_tbl,url_id, content, excerpt, status, visibility,
-     password, publish_date, featured_image, allow_comments,
-     allow_pingbacks, seo_title, seo_description, seo_keywords,
-     word_count, char_count, reading_time, post_format, author,
-     template, og_title, og_description, og_image,
-     twitter_card, canonical_url, tags, created_at, updated_at)
-   VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?,
-     ?, ?, ?, ?,
-     ?, ?, ?, ?,
-     ?, ?, ?, ?, ?,
-     ?, ?, ?, ?,
-     ?, ?, ?, NOW(), NOW())`, // ✅ yaha 3 ? hone chahiye
+(
+  title,
+  description,
+  faqs,
+  page_tbl,
+  url_id,
+  content,
+  excerpt,
+  status,
+  visibility,
+  password,
+  publish_date,
+  featured_image,
+  allow_comments,
+  allow_pingbacks,
+  seo_title,
+  seo_description,
+  seo_keywords,
+  word_count,
+  char_count,
+  reading_time,
+  post_format,
+  author,
+  template,
+  og_title,
+  og_description,
+  og_image,
+  twitter_card,
+  canonical_url,
+  tags,
+  created_at,
+  updated_at
+)
+VALUES
+(
+  ?, ?, ?, ?, ?, ?, ?, ?, ?,
+  ?, ?, ?, ?, ?, ?, ?, ?, ?,
+  ?, ?, ?, ?, ?, ?, ?, ?, ?,
+  ?, ?, NOW(), NOW()
+);`, // ✅ yaha 3 ? hone chahiye
         [
           title,
           description || '',
